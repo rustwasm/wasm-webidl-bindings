@@ -5,7 +5,8 @@ pub trait Actions {
         + From<Self::OutgoingBindingExpressionI32ToEnum>
         + From<Self::OutgoingBindingExpressionView>
         + From<Self::OutgoingBindingExpressionCopy>
-        + From<Self::OutgoingBindingExpressionDict>;
+        + From<Self::OutgoingBindingExpressionDict>
+        + From<Self::OutgoingBindingExpressionBindExport>;
 
     type OutgoingBindingExpressionAs;
     fn outgoing_binding_expression_as(
@@ -59,6 +60,14 @@ pub trait Actions {
         fields: Vec<Self::OutgoingBindingExpression>,
     ) -> Self::OutgoingBindingExpressionDict;
 
+    type OutgoingBindingExpressionBindExport;
+    fn outgoing_binding_expression_bind_export(
+        &mut self,
+        ty: Self::WebidlTypeRef,
+        binding: Self::ExportBindingRef,
+        idx: u32,
+    ) -> Self::OutgoingBindingExpressionBindExport;
+
     type WebidlTypeRef: From<Self::WebidlTypeRefNamed> + From<Self::WebidlTypeRefIndexed>;
 
     type WebidlTypeRefNamed;
@@ -66,4 +75,12 @@ pub trait Actions {
 
     type WebidlTypeRefIndexed;
     fn webidl_type_ref_indexed(&mut self, idx: u32) -> Self::WebidlTypeRefIndexed;
+
+    type ExportBindingRef: From<Self::ExportBindingRefNamed> + From<Self::ExportBindingRefIndexed>;
+
+    type ExportBindingRefNamed;
+    fn export_binding_ref_named(&mut self, name: &str) -> Self::ExportBindingRefNamed;
+
+    type ExportBindingRefIndexed;
+    fn export_binding_ref_indexed(&mut self, idx: u32) -> Self::ExportBindingRefIndexed;
 }

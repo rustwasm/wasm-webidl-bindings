@@ -46,6 +46,22 @@ mod tests {
     err!(webidl_type_ref_err, WebidlTypeRefParser, "1abc");
 
     ok!(
+        export_binding_ref_ok_1,
+        ExportBindingRefParser,
+        "$Contact",
+        ExportBindingRef::Named(ExportBindingRefNamed {
+            name: "$Contact".into(),
+        })
+    );
+    ok!(
+        export_binding_ref_ok_2,
+        ExportBindingRefParser,
+        "42",
+        ExportBindingRef::Indexed(ExportBindingRefIndexed { idx: 42 })
+    );
+    err!(export_binding_ref_err, ExportBindingRefParser, "1abc");
+
+    ok!(
         outgoing_binding_expression_as_ok_1,
         OutgoingBindingExpressionParser,
         "(as long 2)",
@@ -229,5 +245,35 @@ mod tests {
         outgoing_binding_expression_dict_err_1,
         OutgoingBindingExpressionParser,
         "(dict (as long 1))"
+    );
+
+    ok!(
+        outgoing_binding_expression_bind_export_ok_1,
+        OutgoingBindingExpressionParser,
+        "(bind-export SomeCallback SomeBinding 2)",
+        OutgoingBindingExpression::BindExport(OutgoingBindingExpressionBindExport {
+            ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                name: "SomeCallback".into()
+            }),
+            binding: ExportBindingRef::Named(ExportBindingRefNamed {
+                name: "SomeBinding".into()
+            }),
+            idx: 2,
+        })
+    );
+    err!(
+        outgoing_binding_expression_bind_export_err_1,
+        OutgoingBindingExpressionParser,
+        "(bind-export SomeBinding 2)"
+    );
+    err!(
+        outgoing_binding_expression_bind_export_err_2,
+        OutgoingBindingExpressionParser,
+        "(bind-export SomeCallback 2)"
+    );
+    err!(
+        outgoing_binding_expression_bind_export_err_3,
+        OutgoingBindingExpressionParser,
+        "(bind-export SomeCallback SomeBinding)"
     );
 }

@@ -72,6 +72,16 @@ impl Actions for BuildAstActions {
         OutgoingBindingExpressionDict { ty, fields }
     }
 
+    type OutgoingBindingExpressionBindExport = OutgoingBindingExpressionBindExport;
+    fn outgoing_binding_expression_bind_export(
+        &mut self,
+        ty: WebidlTypeRef,
+        binding: ExportBindingRef,
+        idx: u32,
+    ) -> OutgoingBindingExpressionBindExport {
+        OutgoingBindingExpressionBindExport { ty, binding, idx }
+    }
+
     type WebidlTypeRef = WebidlTypeRef;
 
     type WebidlTypeRefNamed = WebidlTypeRefNamed;
@@ -84,6 +94,19 @@ impl Actions for BuildAstActions {
     fn webidl_type_ref_indexed(&mut self, idx: u32) -> WebidlTypeRefIndexed {
         WebidlTypeRefIndexed { idx }
     }
+
+    type ExportBindingRef = ExportBindingRef;
+
+    type ExportBindingRefNamed = ExportBindingRefNamed;
+    fn export_binding_ref_named(&mut self, name: &str) -> ExportBindingRefNamed {
+        let name = name.to_string();
+        ExportBindingRefNamed { name }
+    }
+
+    type ExportBindingRefIndexed = ExportBindingRefIndexed;
+    fn export_binding_ref_indexed(&mut self, idx: u32) -> ExportBindingRefIndexed {
+        ExportBindingRefIndexed { idx }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -95,6 +118,7 @@ pub enum OutgoingBindingExpression {
     View(OutgoingBindingExpressionView),
     Copy(OutgoingBindingExpressionCopy),
     Dict(OutgoingBindingExpressionDict),
+    BindExport(OutgoingBindingExpressionBindExport),
 }
 
 impl From<OutgoingBindingExpressionAs> for OutgoingBindingExpression {
@@ -136,6 +160,12 @@ impl From<OutgoingBindingExpressionCopy> for OutgoingBindingExpression {
 impl From<OutgoingBindingExpressionDict> for OutgoingBindingExpression {
     fn from(s: OutgoingBindingExpressionDict) -> Self {
         OutgoingBindingExpression::Dict(s)
+    }
+}
+
+impl From<OutgoingBindingExpressionBindExport> for OutgoingBindingExpression {
+    fn from(s: OutgoingBindingExpressionBindExport) -> Self {
+        OutgoingBindingExpression::BindExport(s)
     }
 }
 
@@ -185,6 +215,13 @@ pub struct OutgoingBindingExpressionDict {
 }
 
 #[derive(Debug, PartialEq, Eq)]
+pub struct OutgoingBindingExpressionBindExport {
+    pub ty: WebidlTypeRef,
+    pub binding: ExportBindingRef,
+    pub idx: u32,
+}
+
+#[derive(Debug, PartialEq, Eq)]
 pub enum WebidlTypeRef {
     Named(WebidlTypeRefNamed),
     Indexed(WebidlTypeRefIndexed),
@@ -209,5 +246,33 @@ pub struct WebidlTypeRefNamed {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct WebidlTypeRefIndexed {
+    pub idx: u32,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum ExportBindingRef {
+    Named(ExportBindingRefNamed),
+    Indexed(ExportBindingRefIndexed),
+}
+
+impl From<ExportBindingRefNamed> for ExportBindingRef {
+    fn from(n: ExportBindingRefNamed) -> Self {
+        ExportBindingRef::Named(n)
+    }
+}
+
+impl From<ExportBindingRefIndexed> for ExportBindingRef {
+    fn from(i: ExportBindingRefIndexed) -> Self {
+        ExportBindingRef::Indexed(i)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ExportBindingRefNamed {
+    pub name: String,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ExportBindingRefIndexed {
     pub idx: u32,
 }

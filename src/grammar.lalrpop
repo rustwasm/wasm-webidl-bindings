@@ -17,6 +17,19 @@ WebidlTypeRefIndexed: A::WebidlTypeRefIndexed =
     <idx: Unsigned> =>
         actions.webidl_type_ref_indexed(idx);
 
+pub(crate) ExportBindingRef: A::ExportBindingRef = {
+    <a:ExportBindingRefNamed> => a.into(),
+    <a:ExportBindingRefIndexed> => a.into(),
+};
+
+ExportBindingRefNamed: A::ExportBindingRefNamed =
+    <s:r"[a-zA-Z$][a-zA-Z0-9$_]*"> =>
+        actions.export_binding_ref_named(s);
+
+ExportBindingRefIndexed: A::ExportBindingRefIndexed =
+    <idx: Unsigned> =>
+        actions.export_binding_ref_indexed(idx);
+
 pub OutgoingBindingExpression: A::OutgoingBindingExpression = {
     <a:OutgoingBindingExpressionAs> => a.into(),
     <a:OutgoingBindingExpressionUtf8Str> => a.into(),
@@ -25,7 +38,7 @@ pub OutgoingBindingExpression: A::OutgoingBindingExpression = {
     <a:OutgoingBindingExpressionView> => a.into(),
     <a:OutgoingBindingExpressionCopy> => a.into(),
     <a:OutgoingBindingExpressionDict> => a.into(),
-    // TODO: others...
+    <a:OutgoingBindingExpressionBindExport> => a.into(),
 };
 
 OutgoingBindingExpressionAs: A::OutgoingBindingExpressionAs =
@@ -55,5 +68,9 @@ OutgoingBindingExpressionCopy: A::OutgoingBindingExpressionCopy =
 OutgoingBindingExpressionDict: A::OutgoingBindingExpressionDict =
     "(" "dict" <ty:WebidlTypeRef> <fields:OutgoingBindingExpression*> ")" =>
         actions.outgoing_binding_expression_dict(ty, fields);
+
+OutgoingBindingExpressionBindExport: A::OutgoingBindingExpressionBindExport =
+    "(" "bind-export" <ty:WebidlTypeRef> <binding:ExportBindingRef> <idx:Unsigned> ")" =>
+        actions.outgoing_binding_expression_bind_export(ty, binding, idx);
 
 Unsigned: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();
