@@ -21,6 +21,7 @@ pub OutgoingBindingExpression: A::OutgoingBindingExpression = {
     <a:OutgoingBindingExpressionAs> => a.into(),
     <a:OutgoingBindingExpressionUtf8Str> => a.into(),
     <a:OutgoingBindingExpressionUtf8CStr> => a.into(),
+    <a:OutgoingBindingExpressionI32ToEnum> => a.into(),
     // TODO: others...
 };
 
@@ -35,5 +36,9 @@ OutgoingBindingExpressionUtf8Str: A::OutgoingBindingExpressionUtf8Str =
 OutgoingBindingExpressionUtf8CStr: A::OutgoingBindingExpressionUtf8CStr =
     "(" "utf8-cstr" <ty:WebidlTypeRef> <offset:Unsigned> ")" =>
         actions.outgoing_binding_expression_utf8_c_str(ty, offset);
+
+OutgoingBindingExpressionI32ToEnum: A::OutgoingBindingExpressionI32ToEnum =
+    "(" "i32-to-enum" <ty:WebidlTypeRef> <idx:Unsigned> ")" =>
+        actions.outgoing_binding_expression_i32_to_enum(ty, idx);
 
 Unsigned: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();

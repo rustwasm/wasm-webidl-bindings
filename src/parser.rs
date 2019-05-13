@@ -120,4 +120,26 @@ mod tests {
         OutgoingBindingExpressionParser,
         "(utf8-cstr 123)"
     );
+
+    ok!(
+        outgoing_binding_expression_i32_to_enum_ok,
+        OutgoingBindingExpressionParser,
+        "(i32-to-enum Blah 22)",
+        OutgoingBindingExpression::I32ToEnum(OutgoingBindingExpressionI32ToEnum {
+            ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                name: "Blah".into(),
+            }),
+            idx: 22,
+        })
+    );
+    err!(
+        outgoing_binding_expression_i32_to_enum_err_1,
+        OutgoingBindingExpressionParser,
+        "(i32-to-enum Blah)"
+    );
+    err!(
+        outgoing_binding_expression_i32_to_enum_err_2,
+        OutgoingBindingExpressionParser,
+        "(i32-to-enum 22)"
+    );
 }
