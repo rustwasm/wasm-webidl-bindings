@@ -2,7 +2,8 @@ pub trait Actions {
     type OutgoingBindingExpression: From<Self::OutgoingBindingExpressionAs>
         + From<Self::OutgoingBindingExpressionUtf8Str>
         + From<Self::OutgoingBindingExpressionUtf8CStr>
-        + From<Self::OutgoingBindingExpressionI32ToEnum>;
+        + From<Self::OutgoingBindingExpressionI32ToEnum>
+        + From<Self::OutgoingBindingExpressionView>;
 
     type OutgoingBindingExpressionAs;
     fn outgoing_binding_expression_as(
@@ -32,6 +33,14 @@ pub trait Actions {
         ty: Self::WebidlTypeRef,
         idx: u32,
     ) -> Self::OutgoingBindingExpressionI32ToEnum;
+
+    type OutgoingBindingExpressionView;
+    fn outgoing_binding_expression_view(
+        &mut self,
+        ty: Self::WebidlTypeRef,
+        offset: u32,
+        length: u32,
+    ) -> Self::OutgoingBindingExpressionView;
 
     type WebidlTypeRef: From<Self::WebidlTypeRefNamed> + From<Self::WebidlTypeRefIndexed>;
 

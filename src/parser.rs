@@ -142,4 +142,27 @@ mod tests {
         OutgoingBindingExpressionParser,
         "(i32-to-enum 22)"
     );
+
+    ok!(
+        outgoing_binding_expression_view_ok,
+        OutgoingBindingExpressionParser,
+        "(view Uint8Array 123 456)",
+        OutgoingBindingExpression::View(OutgoingBindingExpressionView {
+            ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                name: "Uint8Array".into(),
+            }),
+            offset: 123,
+           length: 456,
+        })
+    );
+    err!(
+        outgoing_binding_expression_view_err_1,
+        OutgoingBindingExpressionParser,
+        "(view Uint8Array 123)"
+    );
+    err!(
+        outgoing_binding_expression_view_err_2,
+        OutgoingBindingExpressionParser,
+        "(view 123 456)"
+    );
 }

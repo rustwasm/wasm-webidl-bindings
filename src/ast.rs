@@ -43,6 +43,16 @@ impl Actions for BuildAstActions {
         OutgoingBindingExpressionI32ToEnum { ty, idx }
     }
 
+    type OutgoingBindingExpressionView = OutgoingBindingExpressionView;
+    fn outgoing_binding_expression_view(
+        &mut self,
+        ty: WebidlTypeRef,
+        offset: u32,
+        length: u32,
+    ) -> OutgoingBindingExpressionView {
+        OutgoingBindingExpressionView { ty, offset, length }
+    }
+
     type WebidlTypeRef = WebidlTypeRef;
 
     type WebidlTypeRefNamed = WebidlTypeRefNamed;
@@ -63,6 +73,7 @@ pub enum OutgoingBindingExpression {
     Utf8Str(OutgoingBindingExpressionUtf8Str),
     Utf8CStr(OutgoingBindingExpressionUtf8CStr),
     I32ToEnum(OutgoingBindingExpressionI32ToEnum),
+    View(OutgoingBindingExpressionView),
 }
 
 impl From<OutgoingBindingExpressionAs> for OutgoingBindingExpression {
@@ -89,6 +100,12 @@ impl From<OutgoingBindingExpressionI32ToEnum> for OutgoingBindingExpression {
     }
 }
 
+impl From<OutgoingBindingExpressionView> for OutgoingBindingExpression {
+    fn from(s: OutgoingBindingExpressionView) -> Self {
+        OutgoingBindingExpression::View(s)
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct OutgoingBindingExpressionAs {
     pub ty: WebidlTypeRef,
@@ -112,6 +129,13 @@ pub struct OutgoingBindingExpressionUtf8CStr {
 pub struct OutgoingBindingExpressionI32ToEnum {
     pub ty: WebidlTypeRef,
     pub idx: u32,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct OutgoingBindingExpressionView {
+    pub ty: WebidlTypeRef,
+    pub offset: u32,
+    pub length: u32,
 }
 
 #[derive(Debug, PartialEq, Eq)]
