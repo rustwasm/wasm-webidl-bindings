@@ -63,6 +63,15 @@ impl Actions for BuildAstActions {
         OutgoingBindingExpressionCopy { ty, offset, length }
     }
 
+    type OutgoingBindingExpressionDict = OutgoingBindingExpressionDict;
+    fn outgoing_binding_expression_dict(
+        &mut self,
+        ty: WebidlTypeRef,
+        fields: Vec<OutgoingBindingExpression>,
+    ) -> OutgoingBindingExpressionDict {
+        OutgoingBindingExpressionDict { ty, fields }
+    }
+
     type WebidlTypeRef = WebidlTypeRef;
 
     type WebidlTypeRefNamed = WebidlTypeRefNamed;
@@ -85,6 +94,7 @@ pub enum OutgoingBindingExpression {
     I32ToEnum(OutgoingBindingExpressionI32ToEnum),
     View(OutgoingBindingExpressionView),
     Copy(OutgoingBindingExpressionCopy),
+    Dict(OutgoingBindingExpressionDict),
 }
 
 impl From<OutgoingBindingExpressionAs> for OutgoingBindingExpression {
@@ -120,6 +130,12 @@ impl From<OutgoingBindingExpressionView> for OutgoingBindingExpression {
 impl From<OutgoingBindingExpressionCopy> for OutgoingBindingExpression {
     fn from(s: OutgoingBindingExpressionCopy) -> Self {
         OutgoingBindingExpression::Copy(s)
+    }
+}
+
+impl From<OutgoingBindingExpressionDict> for OutgoingBindingExpression {
+    fn from(s: OutgoingBindingExpressionDict) -> Self {
+        OutgoingBindingExpression::Dict(s)
     }
 }
 
@@ -160,6 +176,12 @@ pub struct OutgoingBindingExpressionCopy {
     pub ty: WebidlTypeRef,
     pub offset: u32,
     pub length: u32,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct OutgoingBindingExpressionDict {
+    pub ty: WebidlTypeRef,
+    pub fields: Vec<OutgoingBindingExpression>,
 }
 
 #[derive(Debug, PartialEq, Eq)]

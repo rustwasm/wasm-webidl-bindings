@@ -4,7 +4,8 @@ pub trait Actions {
         + From<Self::OutgoingBindingExpressionUtf8CStr>
         + From<Self::OutgoingBindingExpressionI32ToEnum>
         + From<Self::OutgoingBindingExpressionView>
-        + From<Self::OutgoingBindingExpressionCopy>;
+        + From<Self::OutgoingBindingExpressionCopy>
+        + From<Self::OutgoingBindingExpressionDict>;
 
     type OutgoingBindingExpressionAs;
     fn outgoing_binding_expression_as(
@@ -50,6 +51,13 @@ pub trait Actions {
         offset: u32,
         length: u32,
     ) -> Self::OutgoingBindingExpressionCopy;
+
+    type OutgoingBindingExpressionDict;
+    fn outgoing_binding_expression_dict(
+        &mut self,
+        ty: Self::WebidlTypeRef,
+        fields: Vec<Self::OutgoingBindingExpression>,
+    ) -> Self::OutgoingBindingExpressionDict;
 
     type WebidlTypeRef: From<Self::WebidlTypeRefNamed> + From<Self::WebidlTypeRefIndexed>;
 

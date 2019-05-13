@@ -24,6 +24,7 @@ pub OutgoingBindingExpression: A::OutgoingBindingExpression = {
     <a:OutgoingBindingExpressionI32ToEnum> => a.into(),
     <a:OutgoingBindingExpressionView> => a.into(),
     <a:OutgoingBindingExpressionCopy> => a.into(),
+    <a:OutgoingBindingExpressionDict> => a.into(),
     // TODO: others...
 };
 
@@ -50,5 +51,9 @@ OutgoingBindingExpressionView: A::OutgoingBindingExpressionView =
 OutgoingBindingExpressionCopy: A::OutgoingBindingExpressionCopy =
     "(" "copy" <ty:WebidlTypeRef> <offset:Unsigned> <length:Unsigned> ")" =>
         actions.outgoing_binding_expression_copy(ty, offset, length);
+
+OutgoingBindingExpressionDict: A::OutgoingBindingExpressionDict =
+    "(" "dict" <ty:WebidlTypeRef> <fields:OutgoingBindingExpression*> ")" =>
+        actions.outgoing_binding_expression_dict(ty, fields);
 
 Unsigned: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();

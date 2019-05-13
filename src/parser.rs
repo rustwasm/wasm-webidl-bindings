@@ -152,7 +152,7 @@ mod tests {
                 name: "Uint8Array".into(),
             }),
             offset: 123,
-           length: 456,
+            length: 456,
         })
     );
     err!(
@@ -187,5 +187,47 @@ mod tests {
         outgoing_binding_expression_copy_err_2,
         OutgoingBindingExpressionParser,
         "(copy 123 456)"
+    );
+
+    ok!(
+        outgoing_binding_expression_dict_ok_1,
+        OutgoingBindingExpressionParser,
+        "(dict $Contact (utf8-str DOMString 0 1) (as long 2))",
+        OutgoingBindingExpression::Dict(OutgoingBindingExpressionDict {
+            ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                name: "$Contact".into()
+            }),
+            fields: vec![
+                OutgoingBindingExpression::Utf8Str(OutgoingBindingExpressionUtf8Str {
+                    ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                        name: "DOMString".into()
+                    }),
+                    offset: 0,
+                    length: 1,
+                }),
+                OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
+                    ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                        name: "long".into()
+                    }),
+                    idx: 2,
+                })
+            ]
+        })
+    );
+    ok!(
+        outgoing_binding_expression_dict_ok_2,
+        OutgoingBindingExpressionParser,
+        "(dict $Contact)",
+        OutgoingBindingExpression::Dict(OutgoingBindingExpressionDict {
+            ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                name: "$Contact".into()
+            }),
+            fields: vec![]
+        })
+    );
+    err!(
+        outgoing_binding_expression_dict_err_1,
+        OutgoingBindingExpressionParser,
+        "(dict (as long 1))"
     );
 }
