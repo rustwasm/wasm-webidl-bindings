@@ -82,6 +82,23 @@ impl Actions for BuildAstActions {
         OutgoingBindingExpressionBindExport { ty, binding, idx }
     }
 
+    type IncomingBindingExpression = IncomingBindingExpression;
+
+    type IncomingBindingExpressionGet = IncomingBindingExpressionGet;
+    fn incoming_binding_expression_get(&mut self, idx: u32) -> IncomingBindingExpressionGet {
+        IncomingBindingExpressionGet { idx }
+    }
+
+    type IncomingBindingExpressionAs = IncomingBindingExpressionAs;
+    fn incoming_binding_expression_as(
+        &mut self,
+        ty: WasmTypeRef,
+        expr: IncomingBindingExpression,
+    ) -> IncomingBindingExpressionAs {
+        let expr = Box::new(expr);
+        IncomingBindingExpressionAs { ty, expr }
+    }
+
     type WebidlTypeRef = WebidlTypeRef;
 
     type WebidlTypeRefNamed = WebidlTypeRefNamed;
@@ -93,6 +110,19 @@ impl Actions for BuildAstActions {
     type WebidlTypeRefIndexed = WebidlTypeRefIndexed;
     fn webidl_type_ref_indexed(&mut self, idx: u32) -> WebidlTypeRefIndexed {
         WebidlTypeRefIndexed { idx }
+    }
+
+    type WasmTypeRef = WasmTypeRef;
+
+    type WasmTypeRefNamed = WasmTypeRefNamed;
+    fn wasm_type_ref_named(&mut self, name: &str) -> WasmTypeRefNamed {
+        let name = name.to_string();
+        WasmTypeRefNamed { name }
+    }
+
+    type WasmTypeRefIndexed = WasmTypeRefIndexed;
+    fn wasm_type_ref_indexed(&mut self, idx: u32) -> WasmTypeRefIndexed {
+        WasmTypeRefIndexed { idx }
     }
 
     type ExportBindingRef = ExportBindingRef;
@@ -222,6 +252,35 @@ pub struct OutgoingBindingExpressionBindExport {
 }
 
 #[derive(Debug, PartialEq, Eq)]
+pub enum IncomingBindingExpression {
+    Get(IncomingBindingExpressionGet),
+    As(IncomingBindingExpressionAs),
+}
+
+impl From<IncomingBindingExpressionGet> for IncomingBindingExpression {
+    fn from(a: IncomingBindingExpressionGet) -> Self {
+        IncomingBindingExpression::Get(a)
+    }
+}
+
+impl From<IncomingBindingExpressionAs> for IncomingBindingExpression {
+    fn from(a: IncomingBindingExpressionAs) -> Self {
+        IncomingBindingExpression::As(a)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct IncomingBindingExpressionGet {
+    pub idx: u32,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct IncomingBindingExpressionAs {
+    pub ty: WasmTypeRef,
+    pub expr: Box<IncomingBindingExpression>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
 pub enum WebidlTypeRef {
     Named(WebidlTypeRefNamed),
     Indexed(WebidlTypeRefIndexed),
@@ -246,6 +305,34 @@ pub struct WebidlTypeRefNamed {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct WebidlTypeRefIndexed {
+    pub idx: u32,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum WasmTypeRef {
+    Named(WasmTypeRefNamed),
+    Indexed(WasmTypeRefIndexed),
+}
+
+impl From<WasmTypeRefNamed> for WasmTypeRef {
+    fn from(n: WasmTypeRefNamed) -> Self {
+        WasmTypeRef::Named(n)
+    }
+}
+
+impl From<WasmTypeRefIndexed> for WasmTypeRef {
+    fn from(i: WasmTypeRefIndexed) -> Self {
+        WasmTypeRef::Indexed(i)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WasmTypeRefNamed {
+    pub name: String,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WasmTypeRefIndexed {
     pub idx: u32,
 }
 

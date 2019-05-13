@@ -68,6 +68,19 @@ pub trait Actions {
         idx: u32,
     ) -> Self::OutgoingBindingExpressionBindExport;
 
+    type IncomingBindingExpression: From<Self::IncomingBindingExpressionGet>
+        + From<Self::IncomingBindingExpressionAs>;
+
+    type IncomingBindingExpressionGet;
+    fn incoming_binding_expression_get(&mut self, idx: u32) -> Self::IncomingBindingExpressionGet;
+
+    type IncomingBindingExpressionAs;
+    fn incoming_binding_expression_as(
+        &mut self,
+        ty: Self::WasmTypeRef,
+        expr: Self::IncomingBindingExpression,
+    ) -> Self::IncomingBindingExpressionAs;
+
     type WebidlTypeRef: From<Self::WebidlTypeRefNamed> + From<Self::WebidlTypeRefIndexed>;
 
     type WebidlTypeRefNamed;
@@ -75,6 +88,14 @@ pub trait Actions {
 
     type WebidlTypeRefIndexed;
     fn webidl_type_ref_indexed(&mut self, idx: u32) -> Self::WebidlTypeRefIndexed;
+
+    type WasmTypeRef: From<Self::WasmTypeRefNamed> + From<Self::WasmTypeRefIndexed>;
+
+    type WasmTypeRefNamed;
+    fn wasm_type_ref_named(&mut self, name: &str) -> Self::WasmTypeRefNamed;
+
+    type WasmTypeRefIndexed;
+    fn wasm_type_ref_indexed(&mut self, idx: u32) -> Self::WasmTypeRefIndexed;
 
     type ExportBindingRef: From<Self::ExportBindingRefNamed> + From<Self::ExportBindingRefIndexed>;
 

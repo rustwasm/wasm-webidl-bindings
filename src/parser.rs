@@ -46,6 +46,22 @@ mod tests {
     err!(webidl_type_ref_err, WebidlTypeRefParser, "1abc");
 
     ok!(
+        wasm_type_ref_ok_1,
+        WasmTypeRefParser,
+        "$Contact",
+        WasmTypeRef::Named(WasmTypeRefNamed {
+            name: "$Contact".into(),
+        })
+    );
+    ok!(
+        wasm_type_ref_ok_2,
+        WasmTypeRefParser,
+        "42",
+        WasmTypeRef::Indexed(WasmTypeRefIndexed { idx: 42 })
+    );
+    err!(wasm_type_ref_err, WasmTypeRefParser, "1abc");
+
+    ok!(
         export_binding_ref_ok_1,
         ExportBindingRefParser,
         "$Contact",
@@ -275,5 +291,22 @@ mod tests {
         outgoing_binding_expression_bind_export_err_3,
         OutgoingBindingExpressionParser,
         "(bind-export SomeCallback SomeBinding)"
+    );
+
+    ok!(
+        incoming_binding_expression_get_ok_1,
+        IncomingBindingExpressionParser,
+        "(get 9)",
+        IncomingBindingExpression::Get(IncomingBindingExpressionGet { idx: 9 })
+    );
+    err!(
+        incoming_binding_expression_get_err_1,
+        IncomingBindingExpressionParser,
+        "(get)"
+    );
+    err!(
+        incoming_binding_expression_get_err_2,
+        IncomingBindingExpressionParser,
+        "(get 1 2)"
     );
 }

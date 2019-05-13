@@ -17,6 +17,19 @@ WebidlTypeRefIndexed: A::WebidlTypeRefIndexed =
     <idx: Unsigned> =>
         actions.webidl_type_ref_indexed(idx);
 
+pub(crate) WasmTypeRef: A::WasmTypeRef = {
+    <a:WasmTypeRefNamed> => a.into(),
+    <a:WasmTypeRefIndexed> => a.into(),
+};
+
+WasmTypeRefNamed: A::WasmTypeRefNamed =
+    <s:r"[a-zA-Z$][a-zA-Z0-9$_]*"> =>
+        actions.wasm_type_ref_named(s);
+
+WasmTypeRefIndexed: A::WasmTypeRefIndexed =
+    <idx: Unsigned> =>
+        actions.wasm_type_ref_indexed(idx);
+
 pub(crate) ExportBindingRef: A::ExportBindingRef = {
     <a:ExportBindingRefNamed> => a.into(),
     <a:ExportBindingRefIndexed> => a.into(),
@@ -72,5 +85,23 @@ OutgoingBindingExpressionDict: A::OutgoingBindingExpressionDict =
 OutgoingBindingExpressionBindExport: A::OutgoingBindingExpressionBindExport =
     "(" "bind-export" <ty:WebidlTypeRef> <binding:ExportBindingRef> <idx:Unsigned> ")" =>
         actions.outgoing_binding_expression_bind_export(ty, binding, idx);
+
+pub IncomingBindingExpression: A::IncomingBindingExpression = {
+    <a:IncomingBindingExpressionGet> => a.into(),
+    <a:IncomingBindingExpressionAs> => a.into(),
+    // <a:IncomingBindingExpressionAllocUtf8Str> => a.into(),
+    // <a:IncomingBindingExpressionAllocCopy> => a.into(),
+    // <a:IncomingBindingExpressionEnumToI32> => a.into(),
+    // <a:IncomingBindingExpressionField> => a.into(),
+    // <a:IncomingBindingExpressionBindImport> => a.into(),
+};
+
+IncomingBindingExpressionGet: A::IncomingBindingExpressionGet =
+    "(" "get" <idx:Unsigned> ")" =>
+        actions.incoming_binding_expression_get(idx);
+
+IncomingBindingExpressionAs: A::IncomingBindingExpressionAs =
+    "(" "as" <ty:WasmTypeRef> <expr:IncomingBindingExpression> ")" =>
+        actions.incoming_binding_expression_as(ty, expr);
 
 Unsigned: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();
