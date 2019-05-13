@@ -25,6 +25,15 @@ impl Actions for BuildAstActions {
         OutgoingBindingExpressionUtf8Str { ty, offset, length }
     }
 
+    type OutgoingBindingExpressionUtf8CStr = OutgoingBindingExpressionUtf8CStr;
+    fn outgoing_binding_expression_utf8_c_str(
+        &mut self,
+        ty: WebidlTypeRef,
+        offset: u32,
+    ) -> OutgoingBindingExpressionUtf8CStr {
+        OutgoingBindingExpressionUtf8CStr { ty, offset }
+    }
+
     type WebidlTypeRef = WebidlTypeRef;
 
     type WebidlTypeRefNamed = WebidlTypeRefNamed;
@@ -43,6 +52,7 @@ impl Actions for BuildAstActions {
 pub enum OutgoingBindingExpression {
     As(OutgoingBindingExpressionAs),
     Utf8Str(OutgoingBindingExpressionUtf8Str),
+    Utf8CStr(OutgoingBindingExpressionUtf8CStr),
 }
 
 impl From<OutgoingBindingExpressionAs> for OutgoingBindingExpression {
@@ -57,6 +67,12 @@ impl From<OutgoingBindingExpressionUtf8Str> for OutgoingBindingExpression {
     }
 }
 
+impl From<OutgoingBindingExpressionUtf8CStr> for OutgoingBindingExpression {
+    fn from(s: OutgoingBindingExpressionUtf8CStr) -> Self {
+        OutgoingBindingExpression::Utf8CStr(s)
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct OutgoingBindingExpressionAs {
     pub ty: WebidlTypeRef,
@@ -68,6 +84,12 @@ pub struct OutgoingBindingExpressionUtf8Str {
     pub ty: WebidlTypeRef,
     pub offset: u32,
     pub length: u32,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct OutgoingBindingExpressionUtf8CStr {
+    pub ty: WebidlTypeRef,
+    pub offset: u32,
 }
 
 #[derive(Debug, PartialEq, Eq)]

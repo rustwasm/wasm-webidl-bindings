@@ -75,4 +75,49 @@ mod tests {
         OutgoingBindingExpressionParser,
         "(as 2)"
     );
+
+    ok!(
+        outgoing_binding_expression_utf8_str_ok,
+        OutgoingBindingExpressionParser,
+        "(utf8-str DOMString 123 456)",
+        OutgoingBindingExpression::Utf8Str(OutgoingBindingExpressionUtf8Str {
+            ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                name: "DOMString".into(),
+            }),
+            offset: 123,
+            length: 456,
+        })
+    );
+    err!(
+        outgoing_binding_expression_utf8_str_err_1,
+        OutgoingBindingExpressionParser,
+        "(utf8-str DOMString 123)"
+    );
+    err!(
+        outgoing_binding_expression_utf8_str_err_2,
+        OutgoingBindingExpressionParser,
+        "(utf8-str 123 456)"
+    );
+
+    ok!(
+        outgoing_binding_expression_utf8_c_str_ok,
+        OutgoingBindingExpressionParser,
+        "(utf8-cstr DOMString 123)",
+        OutgoingBindingExpression::Utf8CStr(OutgoingBindingExpressionUtf8CStr {
+            ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                name: "DOMString".into(),
+            }),
+            offset: 123,
+        })
+    );
+    err!(
+        outgoing_binding_expression_utf8_c_str_err_1,
+        OutgoingBindingExpressionParser,
+        "(utf8-cstr DOMString)"
+    );
+    err!(
+        outgoing_binding_expression_utf8_c_str_err_2,
+        OutgoingBindingExpressionParser,
+        "(utf8-cstr 123)"
+    );
 }

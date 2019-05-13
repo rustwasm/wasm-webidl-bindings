@@ -20,6 +20,7 @@ WebidlTypeRefIndexed: A::WebidlTypeRefIndexed =
 pub OutgoingBindingExpression: A::OutgoingBindingExpression = {
     <a:OutgoingBindingExpressionAs> => a.into(),
     <a:OutgoingBindingExpressionUtf8Str> => a.into(),
+    <a:OutgoingBindingExpressionUtf8CStr> => a.into(),
     // TODO: others...
 };
 
@@ -30,5 +31,9 @@ OutgoingBindingExpressionAs: A::OutgoingBindingExpressionAs =
 OutgoingBindingExpressionUtf8Str: A::OutgoingBindingExpressionUtf8Str =
     "(" "utf8-str" <ty:WebidlTypeRef> <offset:Unsigned> <length:Unsigned> ")" =>
         actions.outgoing_binding_expression_utf8_str(ty, offset, length);
+
+OutgoingBindingExpressionUtf8CStr: A::OutgoingBindingExpressionUtf8CStr =
+    "(" "utf8-cstr" <ty:WebidlTypeRef> <offset:Unsigned> ")" =>
+        actions.outgoing_binding_expression_utf8_c_str(ty, offset);
 
 Unsigned: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();

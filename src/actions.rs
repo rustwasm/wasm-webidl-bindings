@@ -1,6 +1,7 @@
 pub trait Actions {
     type OutgoingBindingExpression: From<Self::OutgoingBindingExpressionAs>
-        + From<Self::OutgoingBindingExpressionUtf8Str>;
+        + From<Self::OutgoingBindingExpressionUtf8Str>
+        + From<Self::OutgoingBindingExpressionUtf8CStr>;
 
     type OutgoingBindingExpressionAs;
     fn outgoing_binding_expression_as(
@@ -16,6 +17,13 @@ pub trait Actions {
         offset: u32,
         length: u32,
     ) -> Self::OutgoingBindingExpressionUtf8Str;
+
+    type OutgoingBindingExpressionUtf8CStr;
+    fn outgoing_binding_expression_utf8_c_str(
+        &mut self,
+        ty: Self::WebidlTypeRef,
+        offset: u32,
+    ) -> Self::OutgoingBindingExpressionUtf8CStr;
 
     type WebidlTypeRef: From<Self::WebidlTypeRefNamed> + From<Self::WebidlTypeRefIndexed>;
 
