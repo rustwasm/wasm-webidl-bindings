@@ -1,0 +1,34 @@
+use crate::actions::Actions;
+use std::str::FromStr;
+
+grammar<A>(actions: &mut A)
+    where A: Actions;
+
+pub(crate) WebidlTypeRef: A::WebidlTypeRef = {
+    <a:WebidlTypeRefNamed> => a.into(),
+    <a:WebidlTypeRefIndexed> => a.into(),
+};
+
+WebidlTypeRefNamed: A::WebidlTypeRefNamed =
+    <s:r"[a-zA-Z$][a-zA-Z0-9$_]*"> =>
+        actions.webidl_type_ref_named(s);
+
+WebidlTypeRefIndexed: A::WebidlTypeRefIndexed =
+    <idx: Unsigned> =>
+        actions.webidl_type_ref_indexed(idx);
+
+pub OutgoingBindingExpression: A::OutgoingBindingExpression = {
+    <a:OutgoingBindingExpressionAs> => a.into(),
+    <a:OutgoingBindingExpressionUtf8Str> => a.into(),
+    // TODO: others...
+};
+
+OutgoingBindingExpressionAs: A::OutgoingBindingExpressionAs =
+    "(" "as" <ty:WebidlTypeRef> <idx:Unsigned> ")" =>
+        actions.outgoing_binding_expression_as(ty, idx);
+
+OutgoingBindingExpressionUtf8Str: A::OutgoingBindingExpressionUtf8Str =
+    "(" "utf8-str" <ty:WebidlTypeRef> <offset:Unsigned> <length:Unsigned> ")" =>
+        actions.outgoing_binding_expression_utf8_str(ty, offset, length);
+
+Unsigned: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();

@@ -1,0 +1,12 @@
+[package]
+name = "wasm-webidl-bindings"
+version = "0.1.0"
+authors = ["Nick Fitzgerald <fitzgen@gmail.com>", "The Rust and WebAssembly Working Group"]
+edition = "2018"
+
+[dependencies]
+lalrpop-util = "0.17.0"
+regex = "1.1.6"
+
+[build-dependencies]
+lalrpop = "0.17.0"
