@@ -53,6 +53,16 @@ impl Actions for BuildAstActions {
         OutgoingBindingExpressionView { ty, offset, length }
     }
 
+    type OutgoingBindingExpressionCopy = OutgoingBindingExpressionCopy;
+    fn outgoing_binding_expression_copy(
+        &mut self,
+        ty: WebidlTypeRef,
+        offset: u32,
+        length: u32,
+    ) -> OutgoingBindingExpressionCopy {
+        OutgoingBindingExpressionCopy { ty, offset, length }
+    }
+
     type WebidlTypeRef = WebidlTypeRef;
 
     type WebidlTypeRefNamed = WebidlTypeRefNamed;
@@ -74,6 +84,7 @@ pub enum OutgoingBindingExpression {
     Utf8CStr(OutgoingBindingExpressionUtf8CStr),
     I32ToEnum(OutgoingBindingExpressionI32ToEnum),
     View(OutgoingBindingExpressionView),
+    Copy(OutgoingBindingExpressionCopy),
 }
 
 impl From<OutgoingBindingExpressionAs> for OutgoingBindingExpression {
@@ -106,6 +117,12 @@ impl From<OutgoingBindingExpressionView> for OutgoingBindingExpression {
     }
 }
 
+impl From<OutgoingBindingExpressionCopy> for OutgoingBindingExpression {
+    fn from(s: OutgoingBindingExpressionCopy) -> Self {
+        OutgoingBindingExpression::Copy(s)
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct OutgoingBindingExpressionAs {
     pub ty: WebidlTypeRef,
@@ -133,6 +150,13 @@ pub struct OutgoingBindingExpressionI32ToEnum {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct OutgoingBindingExpressionView {
+    pub ty: WebidlTypeRef,
+    pub offset: u32,
+    pub length: u32,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct OutgoingBindingExpressionCopy {
     pub ty: WebidlTypeRef,
     pub offset: u32,
     pub length: u32,

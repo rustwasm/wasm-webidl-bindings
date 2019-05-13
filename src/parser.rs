@@ -165,4 +165,27 @@ mod tests {
         OutgoingBindingExpressionParser,
         "(view 123 456)"
     );
+
+    ok!(
+        outgoing_binding_expression_copy_ok,
+        OutgoingBindingExpressionParser,
+        "(copy Uint8Array 123 456)",
+        OutgoingBindingExpression::Copy(OutgoingBindingExpressionCopy {
+            ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                name: "Uint8Array".into(),
+            }),
+            offset: 123,
+            length: 456,
+        })
+    );
+    err!(
+        outgoing_binding_expression_copy_err_1,
+        OutgoingBindingExpressionParser,
+        "(copy Uint8Array 123)"
+    );
+    err!(
+        outgoing_binding_expression_copy_err_2,
+        OutgoingBindingExpressionParser,
+        "(copy 123 456)"
+    );
 }

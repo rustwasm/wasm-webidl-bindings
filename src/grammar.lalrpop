@@ -23,6 +23,7 @@ pub OutgoingBindingExpression: A::OutgoingBindingExpression = {
     <a:OutgoingBindingExpressionUtf8CStr> => a.into(),
     <a:OutgoingBindingExpressionI32ToEnum> => a.into(),
     <a:OutgoingBindingExpressionView> => a.into(),
+    <a:OutgoingBindingExpressionCopy> => a.into(),
     // TODO: others...
 };
 
@@ -44,6 +45,10 @@ OutgoingBindingExpressionI32ToEnum: A::OutgoingBindingExpressionI32ToEnum =
 
 OutgoingBindingExpressionView: A::OutgoingBindingExpressionView =
     "(" "view" <ty:WebidlTypeRef> <offset:Unsigned> <length:Unsigned> ")" =>
-    actions.outgoing_binding_expression_view(ty, offset, length);
+        actions.outgoing_binding_expression_view(ty, offset, length);
+
+OutgoingBindingExpressionCopy: A::OutgoingBindingExpressionCopy =
+    "(" "copy" <ty:WebidlTypeRef> <offset:Unsigned> <length:Unsigned> ")" =>
+        actions.outgoing_binding_expression_copy(ty, offset, length);
 
 Unsigned: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();

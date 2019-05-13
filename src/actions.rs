@@ -3,7 +3,8 @@ pub trait Actions {
         + From<Self::OutgoingBindingExpressionUtf8Str>
         + From<Self::OutgoingBindingExpressionUtf8CStr>
         + From<Self::OutgoingBindingExpressionI32ToEnum>
-        + From<Self::OutgoingBindingExpressionView>;
+        + From<Self::OutgoingBindingExpressionView>
+        + From<Self::OutgoingBindingExpressionCopy>;
 
     type OutgoingBindingExpressionAs;
     fn outgoing_binding_expression_as(
@@ -41,6 +42,14 @@ pub trait Actions {
         offset: u32,
         length: u32,
     ) -> Self::OutgoingBindingExpressionView;
+
+    type OutgoingBindingExpressionCopy;
+    fn outgoing_binding_expression_copy(
+        &mut self,
+        ty: Self::WebidlTypeRef,
+        offset: u32,
+        length: u32,
+    ) -> Self::OutgoingBindingExpressionCopy;
 
     type WebidlTypeRef: From<Self::WebidlTypeRefNamed> + From<Self::WebidlTypeRefIndexed>;
 
