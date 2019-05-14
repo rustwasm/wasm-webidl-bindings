@@ -43,6 +43,19 @@ ExportBindingRefIndexed: A::ExportBindingRefIndexed =
     <idx: Unsigned> =>
         actions.export_binding_ref_indexed(idx);
 
+pub(crate) ImportBindingRef: A::ImportBindingRef = {
+    <a:ImportBindingRefNamed> => a.into(),
+    <a:ImportBindingRefIndexed> => a.into(),
+};
+
+ImportBindingRefNamed: A::ImportBindingRefNamed =
+    <s:r"[a-zA-Z$][a-zA-Z0-9$_]*"> =>
+        actions.import_binding_ref_named(s);
+
+ImportBindingRefIndexed: A::ImportBindingRefIndexed =
+    <idx: Unsigned> =>
+        actions.import_binding_ref_indexed(idx);
+
 pub OutgoingBindingExpression: A::OutgoingBindingExpression = {
     <a:OutgoingBindingExpressionAs> => a.into(),
     <a:OutgoingBindingExpressionUtf8Str> => a.into(),
@@ -93,7 +106,7 @@ pub IncomingBindingExpression: A::IncomingBindingExpression = {
     <a:IncomingBindingExpressionAllocCopy> => a.into(),
     <a:IncomingBindingExpressionEnumToI32> => a.into(),
     <a:IncomingBindingExpressionField> => a.into(),
-    // <a:IncomingBindingExpressionBindImport> => a.into(),
+    <a:IncomingBindingExpressionBindImport> => a.into(),
 };
 
 IncomingBindingExpressionGet: A::IncomingBindingExpressionGet =
@@ -127,5 +140,9 @@ IncomingBindingExpressionEnumToI32: A::IncomingBindingExpressionEnumToI32 =
 IncomingBindingExpressionField: A::IncomingBindingExpressionField =
     "(" "field" <idx:Unsigned> <expr:IncomingBindingExpression> ")" =>
         actions.incoming_binding_expression_field(idx, expr);
+
+IncomingBindingExpressionBindImport: A::IncomingBindingExpressionBindImport =
+    "(" "bind-import" <ty:WasmTypeRef> <binding:ImportBindingRef> <expr:IncomingBindingExpression> ")" =>
+        actions.incoming_binding_expression_bind_import(ty, binding, expr);
 
 Unsigned: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();

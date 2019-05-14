@@ -147,6 +147,17 @@ impl Actions for BuildAstActions {
         IncomingBindingExpressionField { idx, expr }
     }
 
+    type IncomingBindingExpressionBindImport = IncomingBindingExpressionBindImport;
+    fn incoming_binding_expression_bind_import(
+        &mut self,
+        ty: WasmTypeRef,
+        binding: ImportBindingRef,
+        expr: IncomingBindingExpression,
+    ) -> IncomingBindingExpressionBindImport {
+        let expr = Box::new(expr);
+        IncomingBindingExpressionBindImport { ty, binding, expr }
+    }
+
     type WebidlTypeRef = WebidlTypeRef;
 
     type WebidlTypeRefNamed = WebidlTypeRefNamed;
@@ -184,6 +195,19 @@ impl Actions for BuildAstActions {
     type ExportBindingRefIndexed = ExportBindingRefIndexed;
     fn export_binding_ref_indexed(&mut self, idx: u32) -> ExportBindingRefIndexed {
         ExportBindingRefIndexed { idx }
+    }
+
+    type ImportBindingRef = ImportBindingRef;
+
+    type ImportBindingRefNamed = ImportBindingRefNamed;
+    fn import_binding_ref_named(&mut self, name: &str) -> ImportBindingRefNamed {
+        let name = name.to_string();
+        ImportBindingRefNamed { name }
+    }
+
+    type ImportBindingRefIndexed = ImportBindingRefIndexed;
+    fn import_binding_ref_indexed(&mut self, idx: u32) -> ImportBindingRefIndexed {
+        ImportBindingRefIndexed { idx }
     }
 }
 
@@ -307,6 +331,7 @@ pub enum IncomingBindingExpression {
     AllocCopy(IncomingBindingExpressionAllocCopy),
     EnumToI32(IncomingBindingExpressionEnumToI32),
     Field(IncomingBindingExpressionField),
+    BindImport(IncomingBindingExpressionBindImport),
 }
 
 impl From<IncomingBindingExpressionGet> for IncomingBindingExpression {
@@ -345,6 +370,12 @@ impl From<IncomingBindingExpressionField> for IncomingBindingExpression {
     }
 }
 
+impl From<IncomingBindingExpressionBindImport> for IncomingBindingExpression {
+    fn from(a: IncomingBindingExpressionBindImport) -> Self {
+        IncomingBindingExpression::BindImport(a)
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionGet {
     pub idx: u32,
@@ -377,6 +408,13 @@ pub struct IncomingBindingExpressionEnumToI32 {
 #[derive(Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionField {
     pub idx: u32,
+    pub expr: Box<IncomingBindingExpression>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct IncomingBindingExpressionBindImport {
+    pub ty: WasmTypeRef,
+    pub binding: ImportBindingRef,
     pub expr: Box<IncomingBindingExpression>,
 }
 
@@ -461,5 +499,33 @@ pub struct ExportBindingRefNamed {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ExportBindingRefIndexed {
+    pub idx: u32,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum ImportBindingRef {
+    Named(ImportBindingRefNamed),
+    Indexed(ImportBindingRefIndexed),
+}
+
+impl From<ImportBindingRefNamed> for ImportBindingRef {
+    fn from(n: ImportBindingRefNamed) -> Self {
+        ImportBindingRef::Named(n)
+    }
+}
+
+impl From<ImportBindingRefIndexed> for ImportBindingRef {
+    fn from(i: ImportBindingRefIndexed) -> Self {
+        ImportBindingRef::Indexed(i)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ImportBindingRefNamed {
+    pub name: String,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ImportBindingRefIndexed {
     pub idx: u32,
 }

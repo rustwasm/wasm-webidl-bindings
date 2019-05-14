@@ -73,7 +73,8 @@ pub trait Actions {
         + From<Self::IncomingBindingExpressionAllocUtf8Str>
         + From<Self::IncomingBindingExpressionAllocCopy>
         + From<Self::IncomingBindingExpressionEnumToI32>
-        + From<Self::IncomingBindingExpressionField>;
+        + From<Self::IncomingBindingExpressionField>
+        + From<Self::IncomingBindingExpressionBindImport>;
 
     type IncomingBindingExpressionGet;
     fn incoming_binding_expression_get(&mut self, idx: u32) -> Self::IncomingBindingExpressionGet;
@@ -113,6 +114,14 @@ pub trait Actions {
         expr: Self::IncomingBindingExpression,
     ) -> Self::IncomingBindingExpressionField;
 
+    type IncomingBindingExpressionBindImport;
+    fn incoming_binding_expression_bind_import(
+        &mut self,
+        ty: Self::WasmTypeRef,
+        binding: Self::ImportBindingRef,
+        expr: Self::IncomingBindingExpression,
+    ) -> Self::IncomingBindingExpressionBindImport;
+
     type WebidlTypeRef: From<Self::WebidlTypeRefNamed> + From<Self::WebidlTypeRefIndexed>;
 
     type WebidlTypeRefNamed;
@@ -136,4 +145,12 @@ pub trait Actions {
 
     type ExportBindingRefIndexed;
     fn export_binding_ref_indexed(&mut self, idx: u32) -> Self::ExportBindingRefIndexed;
+
+    type ImportBindingRef: From<Self::ImportBindingRefNamed> + From<Self::ImportBindingRefIndexed>;
+
+    type ImportBindingRefNamed;
+    fn import_binding_ref_named(&mut self, name: &str) -> Self::ImportBindingRefNamed;
+
+    type ImportBindingRefIndexed;
+    fn import_binding_ref_indexed(&mut self, idx: u32) -> Self::ImportBindingRefIndexed;
 }

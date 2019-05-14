@@ -78,6 +78,22 @@ mod tests {
     err!(export_binding_ref_err, ExportBindingRefParser, "1abc");
 
     ok!(
+        import_binding_ref_ok_1,
+        ImportBindingRefParser,
+        "$Contact",
+        ImportBindingRef::Named(ImportBindingRefNamed {
+            name: "$Contact".into(),
+        })
+    );
+    ok!(
+        import_binding_ref_ok_2,
+        ImportBindingRefParser,
+        "42",
+        ImportBindingRef::Indexed(ImportBindingRefIndexed { idx: 42 })
+    );
+    err!(import_binding_ref_err, ImportBindingRefParser, "1abc");
+
+    ok!(
         outgoing_binding_expression_as_ok_1,
         OutgoingBindingExpressionParser,
         "(as long 2)",
@@ -420,5 +436,33 @@ mod tests {
         incoming_binding_expression_field_err_2,
         IncomingBindingExpressionParser,
         "(field 0)"
+    );
+
+    ok!(
+        incoming_binding_expression_bind_import_ok_1,
+        IncomingBindingExpressionParser,
+        "(bind-import hi hello (get 1))",
+        IncomingBindingExpression::BindImport(IncomingBindingExpressionBindImport {
+            ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "hi".into() }),
+            binding: ImportBindingRef::Named(ImportBindingRefNamed { name: "hello".into() }),
+            expr: Box::new(IncomingBindingExpression::Get(
+                IncomingBindingExpressionGet { idx: 1 }
+            )),
+        })
+    );
+    err!(
+        incoming_binding_expression_bind_import_err_1,
+        IncomingBindingExpressionParser,
+        "(bind-import hi hello)"
+    );
+    err!(
+        incoming_binding_expression_bind_import_err_2,
+        IncomingBindingExpressionParser,
+        "(bind-import hi (get 1))"
+    );
+    err!(
+        incoming_binding_expression_bind_import_err_3,
+        IncomingBindingExpressionParser,
+        "(bind-import hello (get 1))"
     );
 }
