@@ -89,7 +89,7 @@ OutgoingBindingExpressionBindExport: A::OutgoingBindingExpressionBindExport =
 pub IncomingBindingExpression: A::IncomingBindingExpression = {
     <a:IncomingBindingExpressionGet> => a.into(),
     <a:IncomingBindingExpressionAs> => a.into(),
-    // <a:IncomingBindingExpressionAllocUtf8Str> => a.into(),
+    <a:IncomingBindingExpressionAllocUtf8Str> => a.into(),
     // <a:IncomingBindingExpressionAllocCopy> => a.into(),
     // <a:IncomingBindingExpressionEnumToI32> => a.into(),
     // <a:IncomingBindingExpressionField> => a.into(),
@@ -103,5 +103,13 @@ IncomingBindingExpressionGet: A::IncomingBindingExpressionGet =
 IncomingBindingExpressionAs: A::IncomingBindingExpressionAs =
     "(" "as" <ty:WasmTypeRef> <expr:IncomingBindingExpression> ")" =>
         actions.incoming_binding_expression_as(ty, expr);
+
+IncomingBindingExpressionAllocUtf8Str: A::IncomingBindingExpressionAllocUtf8Str =
+    "("
+        "alloc-utf8-str"
+        <alloc_func_name:r"[a-zA-Z$][a-zA-Z0-9$_]*">
+        <expr:IncomingBindingExpression>
+    ")" =>
+        actions.incoming_binding_expression_alloc_utf8_str(alloc_func_name, expr);
 
 Unsigned: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();

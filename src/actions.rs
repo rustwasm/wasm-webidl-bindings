@@ -69,7 +69,8 @@ pub trait Actions {
     ) -> Self::OutgoingBindingExpressionBindExport;
 
     type IncomingBindingExpression: From<Self::IncomingBindingExpressionGet>
-        + From<Self::IncomingBindingExpressionAs>;
+        + From<Self::IncomingBindingExpressionAs>
+        + From<Self::IncomingBindingExpressionAllocUtf8Str>;
 
     type IncomingBindingExpressionGet;
     fn incoming_binding_expression_get(&mut self, idx: u32) -> Self::IncomingBindingExpressionGet;
@@ -80,6 +81,13 @@ pub trait Actions {
         ty: Self::WasmTypeRef,
         expr: Self::IncomingBindingExpression,
     ) -> Self::IncomingBindingExpressionAs;
+
+    type IncomingBindingExpressionAllocUtf8Str;
+    fn incoming_binding_expression_alloc_utf8_str(
+        &mut self,
+        alloc_func_name: &str,
+        expr: Self::IncomingBindingExpression,
+    ) -> Self::IncomingBindingExpressionAllocUtf8Str;
 
     type WebidlTypeRef: From<Self::WebidlTypeRefNamed> + From<Self::WebidlTypeRefIndexed>;
 

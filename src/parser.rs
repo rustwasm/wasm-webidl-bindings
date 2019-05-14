@@ -309,4 +309,48 @@ mod tests {
         IncomingBindingExpressionParser,
         "(get 1 2)"
     );
+
+    ok!(
+        incoming_binding_expression_as_ok_1,
+        IncomingBindingExpressionParser,
+        "(as i32 (get 0))",
+        IncomingBindingExpression::As(IncomingBindingExpressionAs {
+            ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "i32".into() }),
+            expr: Box::new(IncomingBindingExpression::Get(
+                IncomingBindingExpressionGet { idx: 0 }
+            )),
+        })
+    );
+    err!(
+        incoming_binding_expression_as_err_1,
+        IncomingBindingExpressionParser,
+        "(as i32)"
+    );
+    err!(
+        incoming_binding_expression_as_err_2,
+        IncomingBindingExpressionParser,
+        "(as (get 1))"
+    );
+
+    ok!(
+        incoming_binding_expression_alloc_utf8_str_ok_1,
+        IncomingBindingExpressionParser,
+        "(alloc-utf8-str malloc (get 0))",
+        IncomingBindingExpression::AllocUtf8Str(IncomingBindingExpressionAllocUtf8Str {
+            alloc_func_name: "malloc".into(),
+            expr: Box::new(IncomingBindingExpression::Get(
+                IncomingBindingExpressionGet { idx: 0 }
+            )),
+        })
+    );
+    err!(
+        incoming_binding_expression_alloc_utf8_str_err_1,
+        IncomingBindingExpressionParser,
+        "(alloc-utf8-str (get 0))"
+    );
+    err!(
+        incoming_binding_expression_alloc_utf8_str_err_2,
+        IncomingBindingExpressionParser,
+        "(alloc-utf8-str malloc)"
+    );
 }
