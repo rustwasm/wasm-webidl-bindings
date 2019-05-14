@@ -375,4 +375,28 @@ mod tests {
         IncomingBindingExpressionParser,
         "(alloc-copy malloc)"
     );
+
+    ok!(
+        incoming_binding_expression_enum_to_i32_ok_1,
+        IncomingBindingExpressionParser,
+        "(enum-to-i32 Blah (get 0))",
+        IncomingBindingExpression::EnumToI32(IncomingBindingExpressionEnumToI32 {
+            ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                name: "Blah".into(),
+            }),
+            expr: Box::new(IncomingBindingExpression::Get(
+                IncomingBindingExpressionGet { idx: 0 }
+            )),
+        })
+    );
+    err!(
+        incoming_binding_expression_enum_to_i32_err_1,
+        IncomingBindingExpressionParser,
+        "(enum-to-i32 (get 0))"
+    );
+    err!(
+        incoming_binding_expression_enum_to_i32_err_2,
+        IncomingBindingExpressionParser,
+        "(enum-to-i32 Blah)"
+    );
 }

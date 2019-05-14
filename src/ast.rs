@@ -127,6 +127,16 @@ impl Actions for BuildAstActions {
         }
     }
 
+    type IncomingBindingExpressionEnumToI32 = IncomingBindingExpressionEnumToI32;
+    fn incoming_binding_expression_enum_to_i32(
+        &mut self,
+        ty: WebidlTypeRef,
+        expr: IncomingBindingExpression,
+    ) -> IncomingBindingExpressionEnumToI32 {
+        let expr = Box::new(expr);
+        IncomingBindingExpressionEnumToI32 { ty, expr }
+    }
+
     type WebidlTypeRef = WebidlTypeRef;
 
     type WebidlTypeRefNamed = WebidlTypeRefNamed;
@@ -285,6 +295,7 @@ pub enum IncomingBindingExpression {
     As(IncomingBindingExpressionAs),
     AllocUtf8Str(IncomingBindingExpressionAllocUtf8Str),
     AllocCopy(IncomingBindingExpressionAllocCopy),
+    EnumToI32(IncomingBindingExpressionEnumToI32),
 }
 
 impl From<IncomingBindingExpressionGet> for IncomingBindingExpression {
@@ -311,6 +322,12 @@ impl From<IncomingBindingExpressionAllocCopy> for IncomingBindingExpression {
     }
 }
 
+impl From<IncomingBindingExpressionEnumToI32> for IncomingBindingExpression {
+    fn from(a: IncomingBindingExpressionEnumToI32) -> Self {
+        IncomingBindingExpression::EnumToI32(a)
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionGet {
     pub idx: u32,
@@ -331,6 +348,12 @@ pub struct IncomingBindingExpressionAllocUtf8Str {
 #[derive(Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionAllocCopy {
     pub alloc_func_name: String,
+    pub expr: Box<IncomingBindingExpression>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct IncomingBindingExpressionEnumToI32 {
+    pub ty: WebidlTypeRef,
     pub expr: Box<IncomingBindingExpression>,
 }
 
