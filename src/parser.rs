@@ -353,4 +353,26 @@ mod tests {
         IncomingBindingExpressionParser,
         "(alloc-utf8-str malloc)"
     );
+
+    ok!(
+        incoming_binding_expression_alloc_copy_ok_1,
+        IncomingBindingExpressionParser,
+        "(alloc-copy malloc (get 0))",
+        IncomingBindingExpression::AllocCopy(IncomingBindingExpressionAllocCopy {
+            alloc_func_name: "malloc".into(),
+            expr: Box::new(IncomingBindingExpression::Get(
+                IncomingBindingExpressionGet { idx: 0 }
+            )),
+        })
+    );
+    err!(
+        incoming_binding_expression_alloc_copy_err_1,
+        IncomingBindingExpressionParser,
+        "(alloc-copy (get 0))"
+    );
+    err!(
+        incoming_binding_expression_alloc_copy_err_2,
+        IncomingBindingExpressionParser,
+        "(alloc-copy malloc)"
+    );
 }

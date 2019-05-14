@@ -113,6 +113,20 @@ impl Actions for BuildAstActions {
         }
     }
 
+    type IncomingBindingExpressionAllocCopy = IncomingBindingExpressionAllocCopy;
+    fn incoming_binding_expression_alloc_copy(
+        &mut self,
+        alloc_func_name: &str,
+        expr: IncomingBindingExpression,
+    ) -> IncomingBindingExpressionAllocCopy {
+        let alloc_func_name = alloc_func_name.into();
+        let expr = Box::new(expr);
+        IncomingBindingExpressionAllocCopy {
+            alloc_func_name,
+            expr,
+        }
+    }
+
     type WebidlTypeRef = WebidlTypeRef;
 
     type WebidlTypeRefNamed = WebidlTypeRefNamed;
@@ -270,6 +284,7 @@ pub enum IncomingBindingExpression {
     Get(IncomingBindingExpressionGet),
     As(IncomingBindingExpressionAs),
     AllocUtf8Str(IncomingBindingExpressionAllocUtf8Str),
+    AllocCopy(IncomingBindingExpressionAllocCopy),
 }
 
 impl From<IncomingBindingExpressionGet> for IncomingBindingExpression {
@@ -290,6 +305,12 @@ impl From<IncomingBindingExpressionAllocUtf8Str> for IncomingBindingExpression {
     }
 }
 
+impl From<IncomingBindingExpressionAllocCopy> for IncomingBindingExpression {
+    fn from(a: IncomingBindingExpressionAllocCopy) -> Self {
+        IncomingBindingExpression::AllocCopy(a)
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionGet {
     pub idx: u32,
@@ -303,6 +324,12 @@ pub struct IncomingBindingExpressionAs {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionAllocUtf8Str {
+    pub alloc_func_name: String,
+    pub expr: Box<IncomingBindingExpression>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct IncomingBindingExpressionAllocCopy {
     pub alloc_func_name: String,
     pub expr: Box<IncomingBindingExpression>,
 }
