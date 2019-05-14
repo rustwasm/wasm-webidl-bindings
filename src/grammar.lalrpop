@@ -92,7 +92,7 @@ pub IncomingBindingExpression: A::IncomingBindingExpression = {
     <a:IncomingBindingExpressionAllocUtf8Str> => a.into(),
     <a:IncomingBindingExpressionAllocCopy> => a.into(),
     <a:IncomingBindingExpressionEnumToI32> => a.into(),
-    // <a:IncomingBindingExpressionField> => a.into(),
+    <a:IncomingBindingExpressionField> => a.into(),
     // <a:IncomingBindingExpressionBindImport> => a.into(),
 };
 
@@ -123,5 +123,9 @@ IncomingBindingExpressionAllocCopy: A::IncomingBindingExpressionAllocCopy =
 IncomingBindingExpressionEnumToI32: A::IncomingBindingExpressionEnumToI32 =
     "(" "enum-to-i32" <ty:WebidlTypeRef> <expr:IncomingBindingExpression> ")" =>
         actions.incoming_binding_expression_enum_to_i32(ty, expr);
+
+IncomingBindingExpressionField: A::IncomingBindingExpressionField =
+    "(" "field" <idx:Unsigned> <expr:IncomingBindingExpression> ")" =>
+        actions.incoming_binding_expression_field(idx, expr);
 
 Unsigned: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();

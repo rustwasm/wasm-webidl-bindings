@@ -399,4 +399,26 @@ mod tests {
         IncomingBindingExpressionParser,
         "(enum-to-i32 Blah)"
     );
+
+    ok!(
+        incoming_binding_expression_field_ok_1,
+        IncomingBindingExpressionParser,
+        "(field 0 (get 1))",
+        IncomingBindingExpression::Field(IncomingBindingExpressionField {
+            idx: 0,
+            expr: Box::new(IncomingBindingExpression::Get(
+                IncomingBindingExpressionGet { idx: 1 }
+            )),
+        })
+    );
+    err!(
+        incoming_binding_expression_field_err_1,
+        IncomingBindingExpressionParser,
+        "(field (get 1))"
+    );
+    err!(
+        incoming_binding_expression_field_err_2,
+        IncomingBindingExpressionParser,
+        "(field 0)"
+    );
 }

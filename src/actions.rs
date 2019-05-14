@@ -72,7 +72,8 @@ pub trait Actions {
         + From<Self::IncomingBindingExpressionAs>
         + From<Self::IncomingBindingExpressionAllocUtf8Str>
         + From<Self::IncomingBindingExpressionAllocCopy>
-        + From<Self::IncomingBindingExpressionEnumToI32>;
+        + From<Self::IncomingBindingExpressionEnumToI32>
+        + From<Self::IncomingBindingExpressionField>;
 
     type IncomingBindingExpressionGet;
     fn incoming_binding_expression_get(&mut self, idx: u32) -> Self::IncomingBindingExpressionGet;
@@ -104,6 +105,13 @@ pub trait Actions {
         ty: Self::WebidlTypeRef,
         expr: Self::IncomingBindingExpression,
     ) -> Self::IncomingBindingExpressionEnumToI32;
+
+    type IncomingBindingExpressionField;
+    fn incoming_binding_expression_field(
+        &mut self,
+        idx: u32,
+        expr: Self::IncomingBindingExpression,
+    ) -> Self::IncomingBindingExpressionField;
 
     type WebidlTypeRef: From<Self::WebidlTypeRefNamed> + From<Self::WebidlTypeRefIndexed>;
 
