@@ -12,7 +12,7 @@ pub trait Actions {
     fn webidl_type(&mut self, name: Option<&str>, ty: Self::WebidlCompoundType)
         -> Self::WebidlType;
 
-    type WebidlCompoundType: From<Self::WebidlFunction>;
+    type WebidlCompoundType: From<Self::WebidlFunction> + From<Self::WebidlDictionary>;
 
     type WebidlFunction;
     fn webidl_function(
@@ -44,6 +44,22 @@ pub trait Actions {
 
     type WebidlFunctionResult;
     fn webidl_function_result(&mut self, ty: Self::WebidlTypeRef) -> Self::WebidlFunctionResult;
+
+    type WebidlDictionary;
+    fn webidl_dictionary(
+        &mut self,
+        fields: Vec<Self::WebidlDictionaryField>,
+    ) -> Self::WebidlDictionary;
+
+    type WebidlDictionaryField;
+    fn webidl_dictionary_field(
+        &mut self,
+        name: Self::WebidlDictionaryFieldName,
+        ty: Self::WebidlTypeRef,
+    ) -> Self::WebidlDictionaryField;
+
+    type WebidlDictionaryFieldName;
+    fn webidl_dictionary_field_name(&mut self, name: &str) -> Self::WebidlDictionaryFieldName;
 
     type WebidlFunctionBindingsSubsection: From<Vec<Self::FunctionBinding>>;
 

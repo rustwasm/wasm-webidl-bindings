@@ -17,9 +17,9 @@ pub(crate) WebidlType: A::WebidlType =
 
 WebidlCompoundType: A::WebidlCompoundType = {
     <a:WebidlFunction> => a.into(),
-    // <a:WebidlCompoundTypeDictionary> => a.into(),
-    // <a:WebidlCompoundTypeEnumeration> => a.into(),
-    // <a:WebidlCompoundTypeUnion> => a.into(),
+    <a:WebidlDictionary> => a.into(),
+    // <a:WebidlEnumeration> => a.into(),
+    // <a:WebidlUnion> => a.into(),
 };
 
 WebidlFunction: A::WebidlFunction = {
@@ -54,6 +54,18 @@ WebidlFunctionParams: A::WebidlFunctionParams =
 WebidlFunctionResult: A::WebidlFunctionResult =
     "(" "result" <ty:WebidlTypeRef> ")" =>
         actions.webidl_function_result(ty);
+
+WebidlDictionary: A::WebidlDictionary =
+    "(" "dict" <fields:WebidlDictionaryField*> ")" =>
+        actions.webidl_dictionary(fields);
+
+WebidlDictionaryField: A::WebidlDictionaryField =
+    "(" "field" <name:WebidlDictionaryFieldName> <ty:WebidlTypeRef> ")" =>
+        actions.webidl_dictionary_field(name, ty);
+
+WebidlDictionaryFieldName: A::WebidlDictionaryFieldName =
+    <name:r#""(([^\\"]|\\.)*)""#> =>
+        actions.webidl_dictionary_field_name(&name[1..(name.len() - 1)]);
 
 WebidlFunctionBindingsSubsection: A::WebidlFunctionBindingsSubsection =
     <bindings:FunctionBinding*> => bindings.into();

@@ -161,6 +161,50 @@ mod tests {
     );
 
     ok!(
+        webidl_type_dict_ok_1,
+        WebidlTypeParser,
+        r#"type $Contact (dict (field "name" DOMString) (field "age" long))"#,
+        WebidlType {
+            name: Some("$Contact".into()),
+            ty: WebidlCompoundType::Dictionary(WebidlDictionary {
+                fields: vec![
+                    WebidlDictionaryField {
+                        name: "name".into(),
+                        ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                            name: "DOMString".into()
+                        }),
+                    },
+                    WebidlDictionaryField {
+                        name: "age".into(),
+                        ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                            name: "long".into()
+                        }),
+                    },
+                ],
+            }),
+        }
+    );
+    ok!(
+        webidl_type_dict_ok_2,
+        WebidlTypeParser,
+        r#"type $Contact (dict)"#,
+        WebidlType {
+            name: Some("$Contact".into()),
+            ty: WebidlCompoundType::Dictionary(WebidlDictionary { fields: vec![] }),
+        }
+    );
+    err!(
+        webidl_type_dict_err_1,
+        WebidlTypeParser,
+        r#"type $Contact (dict (field "name"))"#
+    );
+    err!(
+        webidl_type_dict_err_2,
+        WebidlTypeParser,
+        r#"type $Contact (dict (field DOMString))"#
+    );
+
+    ok!(
         webidl_type_ref_ok_1,
         WebidlTypeRefParser,
         "$Contact",

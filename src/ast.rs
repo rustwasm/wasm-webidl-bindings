@@ -62,6 +62,25 @@ impl Actions for BuildAstActions {
         ty
     }
 
+    type WebidlDictionary = WebidlDictionary;
+    fn webidl_dictionary(&mut self, fields: Vec<WebidlDictionaryField>) -> WebidlDictionary {
+        WebidlDictionary { fields }
+    }
+
+    type WebidlDictionaryField = WebidlDictionaryField;
+    fn webidl_dictionary_field(
+        &mut self,
+        name: String,
+        ty: WebidlTypeRef,
+    ) -> WebidlDictionaryField {
+        WebidlDictionaryField { name, ty }
+    }
+
+    type WebidlDictionaryFieldName = String;
+    fn webidl_dictionary_field_name(&mut self, name: &str) -> String {
+        name.into()
+    }
+
     type WebidlFunctionBindingsSubsection = WebidlFunctionBindingsSubsection;
 
     type FunctionBinding = FunctionBinding;
@@ -299,11 +318,18 @@ pub struct WebidlType {
 #[derive(Debug, PartialEq, Eq)]
 pub enum WebidlCompoundType {
     Function(WebidlFunction),
+    Dictionary(WebidlDictionary),
 }
 
 impl From<WebidlFunction> for WebidlCompoundType {
     fn from(a: WebidlFunction) -> Self {
         WebidlCompoundType::Function(a)
+    }
+}
+
+impl From<WebidlDictionary> for WebidlCompoundType {
+    fn from(a: WebidlDictionary) -> Self {
+        WebidlCompoundType::Dictionary(a)
     }
 }
 
@@ -329,6 +355,17 @@ impl From<WebidlFunctionKindMethod> for WebidlFunctionKind {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct WebidlFunctionKindMethod {
+    pub ty: WebidlTypeRef,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WebidlDictionary {
+    pub fields: Vec<WebidlDictionaryField>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WebidlDictionaryField {
+    pub name: String,
     pub ty: WebidlTypeRef,
 }
 
