@@ -4,6 +4,68 @@ use crate::actions::Actions;
 pub struct BuildAstActions;
 
 impl Actions for BuildAstActions {
+    type WebidlBindingsSection = WebidlBindingsSection;
+
+    fn webidl_bindings_section(
+        &mut self,
+        types: WebidlTypeSubsection,
+        bindings: WebidlFunctionBindingsSubsection,
+    ) -> WebidlBindingsSection {
+        WebidlBindingsSection { types, bindings }
+    }
+
+    type WebidlTypeSubsection = WebidlTypeSubsection;
+
+    type WebidlType = WebidlType;
+    fn webidl_type(&mut self, name: Option<&str>, ty: WebidlCompoundType) -> WebidlType {
+        let name = name.map(ToString::to_string);
+        WebidlType { name, ty }
+    }
+
+    type WebidlCompoundType = WebidlCompoundType;
+
+    type WebidlFunction = WebidlFunction;
+    fn webidl_function(
+        &mut self,
+        kind: Option<WebidlFunctionKind>,
+        params: Option<Vec<WebidlTypeRef>>,
+        result: Option<WebidlTypeRef>,
+    ) -> WebidlFunction {
+        let kind = kind.unwrap_or(WebidlFunctionKind::Static);
+        let params = params.unwrap_or(vec![]);
+        WebidlFunction {
+            kind,
+            params,
+            result,
+        }
+    }
+
+    type WebidlFunctionKind = WebidlFunctionKind;
+
+    type WebidlFunctionKindMethod = WebidlFunctionKindMethod;
+    fn webidl_function_kind_method(&mut self, ty: WebidlTypeRef) -> WebidlFunctionKindMethod {
+        WebidlFunctionKindMethod { ty }
+    }
+
+    type WebidlFunctionKindConstructor = WebidlFunctionKind;
+    fn webidl_function_kind_constructor_default_new_target(&mut self) -> WebidlFunctionKind {
+        WebidlFunctionKind::Constructor
+    }
+
+    type WebidlFunctionParams = Vec<WebidlTypeRef>;
+    fn webidl_function_params(&mut self, tys: Vec<WebidlTypeRef>) -> Vec<WebidlTypeRef> {
+        tys
+    }
+
+    type WebidlFunctionResult = WebidlTypeRef;
+    fn webidl_function_result(&mut self, ty: WebidlTypeRef) -> WebidlTypeRef {
+        ty
+    }
+
+    type WebidlFunctionBindingsSubsection = WebidlFunctionBindingsSubsection;
+
+    type FunctionBinding = FunctionBinding;
+
     type OutgoingBindingExpression = OutgoingBindingExpression;
 
     type OutgoingBindingExpressionAs = OutgoingBindingExpressionAs;
@@ -210,6 +272,79 @@ impl Actions for BuildAstActions {
         ImportBindingRefIndexed { idx }
     }
 }
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WebidlBindingsSection {
+    pub types: WebidlTypeSubsection,
+    pub bindings: WebidlFunctionBindingsSubsection,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WebidlTypeSubsection {
+    pub types: Vec<WebidlType>,
+}
+
+impl From<Vec<WebidlType>> for WebidlTypeSubsection {
+    fn from(types: Vec<WebidlType>) -> Self {
+        WebidlTypeSubsection { types }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WebidlType {
+    pub name: Option<String>,
+    pub ty: WebidlCompoundType,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum WebidlCompoundType {
+    Function(WebidlFunction),
+}
+
+impl From<WebidlFunction> for WebidlCompoundType {
+    fn from(a: WebidlFunction) -> Self {
+        WebidlCompoundType::Function(a)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WebidlFunction {
+    pub kind: WebidlFunctionKind,
+    pub params: Vec<WebidlTypeRef>,
+    pub result: Option<WebidlTypeRef>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum WebidlFunctionKind {
+    Static,
+    Method(WebidlFunctionKindMethod),
+    Constructor,
+}
+
+impl From<WebidlFunctionKindMethod> for WebidlFunctionKind {
+    fn from(a: WebidlFunctionKindMethod) -> Self {
+        WebidlFunctionKind::Method(a)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WebidlFunctionKindMethod {
+    pub ty: WebidlTypeRef,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WebidlFunctionBindingsSubsection {
+    pub bindings: Vec<FunctionBinding>,
+}
+
+impl From<Vec<FunctionBinding>> for WebidlFunctionBindingsSubsection {
+    fn from(bindings: Vec<FunctionBinding>) -> Self {
+        WebidlFunctionBindingsSubsection { bindings }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum FunctionBinding {}
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum OutgoingBindingExpression {

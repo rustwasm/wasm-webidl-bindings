@@ -30,6 +30,137 @@ mod tests {
     }
 
     ok!(
+        webidl_type_func_ok_1,
+        WebidlTypeParser,
+        "type $AddContactFuncWebIDL (func (method any) (param $Contact DOMString) (result bool))",
+        WebidlType {
+            name: Some("$AddContactFuncWebIDL".into()),
+            ty: WebidlCompoundType::Function(WebidlFunction {
+                kind: WebidlFunctionKind::Method(WebidlFunctionKindMethod {
+                    ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "any".into() })
+                }),
+                params: vec![
+                    WebidlTypeRef::Named(WebidlTypeRefNamed {
+                        name: "$Contact".into()
+                    }),
+                    WebidlTypeRef::Named(WebidlTypeRefNamed {
+                        name: "DOMString".into()
+                    }),
+                ],
+                result: Some(WebidlTypeRef::Named(WebidlTypeRefNamed {
+                    name: "bool".into()
+                })),
+            })
+        }
+    );
+    ok!(
+        webidl_type_func_ok_2,
+        WebidlTypeParser,
+        "type $AddContactFuncWebIDL (func (method any) (param $Contact DOMString))",
+        WebidlType {
+            name: Some("$AddContactFuncWebIDL".into()),
+            ty: WebidlCompoundType::Function(WebidlFunction {
+                kind: WebidlFunctionKind::Method(WebidlFunctionKindMethod {
+                    ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "any".into() })
+                }),
+                params: vec![
+                    WebidlTypeRef::Named(WebidlTypeRefNamed {
+                        name: "$Contact".into()
+                    }),
+                    WebidlTypeRef::Named(WebidlTypeRefNamed {
+                        name: "DOMString".into()
+                    }),
+                ],
+                result: None,
+            })
+        }
+    );
+    ok!(
+        webidl_type_func_ok_3,
+        WebidlTypeParser,
+        "type $AddContactFuncWebIDL (func (param DOMString))",
+        WebidlType {
+            name: Some("$AddContactFuncWebIDL".into()),
+            ty: WebidlCompoundType::Function(WebidlFunction {
+                kind: WebidlFunctionKind::Static,
+                params: vec![WebidlTypeRef::Named(WebidlTypeRefNamed {
+                    name: "DOMString".into()
+                })],
+                result: None,
+            })
+        }
+    );
+    ok!(
+        webidl_type_func_ok_4,
+        WebidlTypeParser,
+        "type $AddContactFuncWebIDL (func (param))",
+        WebidlType {
+            name: Some("$AddContactFuncWebIDL".into()),
+            ty: WebidlCompoundType::Function(WebidlFunction {
+                kind: WebidlFunctionKind::Static,
+                params: vec![],
+                result: None,
+            })
+        }
+    );
+    ok!(
+        webidl_type_func_ok_5,
+        WebidlTypeParser,
+        "type $AddContactFuncWebIDL (func)",
+        WebidlType {
+            name: Some("$AddContactFuncWebIDL".into()),
+            ty: WebidlCompoundType::Function(WebidlFunction {
+                kind: WebidlFunctionKind::Static,
+                params: vec![],
+                result: None,
+            })
+        }
+    );
+    ok!(
+        webidl_type_func_ok_6,
+        WebidlTypeParser,
+        "type (func)",
+        WebidlType {
+            name: None,
+            ty: WebidlCompoundType::Function(WebidlFunction {
+                kind: WebidlFunctionKind::Static,
+                params: vec![],
+                result: None,
+            })
+        }
+    );
+    ok!(
+        webidl_type_func_ok_7,
+        WebidlTypeParser,
+        "type MyCtor (func (constructor default-new-target) (result any))",
+        WebidlType {
+            name: Some("MyCtor".into()),
+            ty: WebidlCompoundType::Function(WebidlFunction {
+                kind: WebidlFunctionKind::Constructor,
+                params: vec![],
+                result: Some(WebidlTypeRef::Named(WebidlTypeRefNamed {
+                    name: "any".into()
+                })),
+            })
+        }
+    );
+    err!(
+        webidl_type_func_err_1,
+        WebidlTypeParser,
+        "type blahBlahBlah"
+    );
+    err!(
+        webidl_type_func_err_2,
+        WebidlTypeParser,
+        "type blahBlahBlah (func (result any) (result any))"
+    );
+    err!(
+        webidl_type_func_err_3,
+        WebidlTypeParser,
+        "type blahBlahBlah (func (method any) (method any))"
+    );
+
+    ok!(
         webidl_type_ref_ok_1,
         WebidlTypeRefParser,
         "$Contact",
@@ -444,7 +575,9 @@ mod tests {
         "(bind-import hi hello (get 1))",
         IncomingBindingExpression::BindImport(IncomingBindingExpressionBindImport {
             ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "hi".into() }),
-            binding: ImportBindingRef::Named(ImportBindingRefNamed { name: "hello".into() }),
+            binding: ImportBindingRef::Named(ImportBindingRefNamed {
+                name: "hello".into()
+            }),
             expr: Box::new(IncomingBindingExpression::Get(
                 IncomingBindingExpressionGet { idx: 1 }
             )),

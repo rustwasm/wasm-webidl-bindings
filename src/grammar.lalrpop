@@ -4,13 +4,73 @@ use std::str::FromStr;
 grammar<A>(actions: &mut A)
     where A: Actions;
 
+pub WebidlBindingsSection: A::WebidlBindingsSection =
+    <types:WebidlTypeSubsection> <bindings:WebidlFunctionBindingsSubsection> =>
+        actions.webidl_bindings_section(types, bindings);
+
+WebidlTypeSubsection: A::WebidlTypeSubsection =
+    <types:WebidlType*> => types.into();
+
+pub(crate) WebidlType: A::WebidlType =
+    "type" <name:Identifier?> <ty:WebidlCompoundType> =>
+        actions.webidl_type(name, ty);
+
+WebidlCompoundType: A::WebidlCompoundType = {
+    <a:WebidlFunction> => a.into(),
+    // <a:WebidlCompoundTypeDictionary> => a.into(),
+    // <a:WebidlCompoundTypeEnumeration> => a.into(),
+    // <a:WebidlCompoundTypeUnion> => a.into(),
+};
+
+WebidlFunction: A::WebidlFunction = {
+    "("
+        "func"
+        <kind:WebidlFunctionKind?>
+        <params:WebidlFunctionParams?>
+        <result:WebidlFunctionResult?>
+    ")" => actions.webidl_function(kind, params, result),
+};
+
+WebidlFunctionKind: A::WebidlFunctionKind = {
+    <a:WebidlFunctionKindMethod> => a.into(),
+    <a:WebidlFunctionKindConstructor> => a.into(),
+    // NB: functions that lack a kind are implicitly static.
+};
+
+WebidlFunctionKindMethod: A::WebidlFunctionKindMethod =
+    "(" "method" <ty:WebidlTypeRef> ")" =>
+        actions.webidl_function_kind_method(ty);
+
+WebidlFunctionKindConstructor: A::WebidlFunctionKindConstructor = {
+    "(" "constructor" "default-new-target" ")" =>
+        actions.webidl_function_kind_constructor_default_new_target(),
+    // TODO: What are the non-default target forms?
+};
+
+WebidlFunctionParams: A::WebidlFunctionParams =
+    "(" "param" <tys:WebidlTypeRef*> ")" =>
+        actions.webidl_function_params(tys);
+
+WebidlFunctionResult: A::WebidlFunctionResult =
+    "(" "result" <ty:WebidlTypeRef> ")" =>
+        actions.webidl_function_result(ty);
+
+WebidlFunctionBindingsSubsection: A::WebidlFunctionBindingsSubsection =
+    <bindings:FunctionBinding*> => bindings.into();
+
+FunctionBinding: A::FunctionBinding = {
+    "TODO-FUNCTION-BINDING" => unimplemented!(),
+    // <a:ImportBinding> => a.into(),
+    // <a:ExportBinding> => a.into(),
+};
+
 pub(crate) WebidlTypeRef: A::WebidlTypeRef = {
     <a:WebidlTypeRefNamed> => a.into(),
     <a:WebidlTypeRefIndexed> => a.into(),
 };
 
 WebidlTypeRefNamed: A::WebidlTypeRefNamed =
-    <s:r"[a-zA-Z$][a-zA-Z0-9$_]*"> =>
+    <s:Identifier> =>
         actions.webidl_type_ref_named(s);
 
 WebidlTypeRefIndexed: A::WebidlTypeRefIndexed =
@@ -23,7 +83,7 @@ pub(crate) WasmTypeRef: A::WasmTypeRef = {
 };
 
 WasmTypeRefNamed: A::WasmTypeRefNamed =
-    <s:r"[a-zA-Z$][a-zA-Z0-9$_]*"> =>
+    <s:Identifier> =>
         actions.wasm_type_ref_named(s);
 
 WasmTypeRefIndexed: A::WasmTypeRefIndexed =
@@ -36,7 +96,7 @@ pub(crate) ExportBindingRef: A::ExportBindingRef = {
 };
 
 ExportBindingRefNamed: A::ExportBindingRefNamed =
-    <s:r"[a-zA-Z$][a-zA-Z0-9$_]*"> =>
+    <s:Identifier> =>
         actions.export_binding_ref_named(s);
 
 ExportBindingRefIndexed: A::ExportBindingRefIndexed =
@@ -49,7 +109,7 @@ pub(crate) ImportBindingRef: A::ImportBindingRef = {
 };
 
 ImportBindingRefNamed: A::ImportBindingRefNamed =
-    <s:r"[a-zA-Z$][a-zA-Z0-9$_]*"> =>
+    <s:Identifier> =>
         actions.import_binding_ref_named(s);
 
 ImportBindingRefIndexed: A::ImportBindingRefIndexed =
@@ -120,7 +180,7 @@ IncomingBindingExpressionAs: A::IncomingBindingExpressionAs =
 IncomingBindingExpressionAllocUtf8Str: A::IncomingBindingExpressionAllocUtf8Str =
     "("
         "alloc-utf8-str"
-        <alloc_func_name:r"[a-zA-Z$][a-zA-Z0-9$_]*">
+        <alloc_func_name:Identifier>
         <expr:IncomingBindingExpression>
     ")" =>
         actions.incoming_binding_expression_alloc_utf8_str(alloc_func_name, expr);
@@ -128,7 +188,7 @@ IncomingBindingExpressionAllocUtf8Str: A::IncomingBindingExpressionAllocUtf8Str 
 IncomingBindingExpressionAllocCopy: A::IncomingBindingExpressionAllocCopy =
     "("
         "alloc-copy"
-        <alloc_func_name:r"[a-zA-Z$][a-zA-Z0-9$_]*">
+        <alloc_func_name:Identifier>
         <expr:IncomingBindingExpression>
     ")" =>
         actions.incoming_binding_expression_alloc_copy(alloc_func_name, expr);
@@ -146,3 +206,5 @@ IncomingBindingExpressionBindImport: A::IncomingBindingExpressionBindImport =
         actions.incoming_binding_expression_bind_import(ty, binding, expr);
 
 Unsigned: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();
+
+Identifier: &'input str = <r"[a-zA-Z$][a-zA-Z0-9$_]*">;

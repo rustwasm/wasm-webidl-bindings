@@ -1,4 +1,54 @@
 pub trait Actions {
+    type WebidlBindingsSection;
+    fn webidl_bindings_section(
+        &mut self,
+        types: Self::WebidlTypeSubsection,
+        bindings: Self::WebidlFunctionBindingsSubsection,
+    ) -> Self::WebidlBindingsSection;
+
+    type WebidlTypeSubsection: From<Vec<Self::WebidlType>>;
+
+    type WebidlType;
+    fn webidl_type(&mut self, name: Option<&str>, ty: Self::WebidlCompoundType)
+        -> Self::WebidlType;
+
+    type WebidlCompoundType: From<Self::WebidlFunction>;
+
+    type WebidlFunction;
+    fn webidl_function(
+        &mut self,
+        kind: Option<Self::WebidlFunctionKind>,
+        params: Option<Self::WebidlFunctionParams>,
+        result: Option<Self::WebidlFunctionResult>,
+    ) -> Self::WebidlFunction;
+
+    type WebidlFunctionKind: From<Self::WebidlFunctionKindMethod>
+        + From<Self::WebidlFunctionKindConstructor>;
+
+    type WebidlFunctionKindMethod;
+    fn webidl_function_kind_method(
+        &mut self,
+        ty: Self::WebidlTypeRef,
+    ) -> Self::WebidlFunctionKindMethod;
+
+    type WebidlFunctionKindConstructor;
+    fn webidl_function_kind_constructor_default_new_target(
+        &mut self,
+    ) -> Self::WebidlFunctionKindConstructor;
+
+    type WebidlFunctionParams;
+    fn webidl_function_params(
+        &mut self,
+        tys: Vec<Self::WebidlTypeRef>,
+    ) -> Self::WebidlFunctionParams;
+
+    type WebidlFunctionResult;
+    fn webidl_function_result(&mut self, ty: Self::WebidlTypeRef) -> Self::WebidlFunctionResult;
+
+    type WebidlFunctionBindingsSubsection: From<Vec<Self::FunctionBinding>>;
+
+    type FunctionBinding;
+
     type OutgoingBindingExpression: From<Self::OutgoingBindingExpressionAs>
         + From<Self::OutgoingBindingExpressionUtf8Str>
         + From<Self::OutgoingBindingExpressionUtf8CStr>
