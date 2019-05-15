@@ -81,6 +81,16 @@ impl Actions for BuildAstActions {
         name.into()
     }
 
+    type WebidlEnumeration = WebidlEnumeration;
+    fn webidl_enumeration(&mut self, values: Vec<String>) -> WebidlEnumeration {
+        WebidlEnumeration { values }
+    }
+
+    type WebidlEnumerationValue = String;
+    fn webidl_enumeration_value(&mut self, value: &str) -> String {
+        value.into()
+    }
+
     type WebidlFunctionBindingsSubsection = WebidlFunctionBindingsSubsection;
 
     type FunctionBinding = FunctionBinding;
@@ -319,6 +329,7 @@ pub struct WebidlType {
 pub enum WebidlCompoundType {
     Function(WebidlFunction),
     Dictionary(WebidlDictionary),
+    Enumeration(WebidlEnumeration),
 }
 
 impl From<WebidlFunction> for WebidlCompoundType {
@@ -330,6 +341,12 @@ impl From<WebidlFunction> for WebidlCompoundType {
 impl From<WebidlDictionary> for WebidlCompoundType {
     fn from(a: WebidlDictionary) -> Self {
         WebidlCompoundType::Dictionary(a)
+    }
+}
+
+impl From<WebidlEnumeration> for WebidlCompoundType {
+    fn from(a: WebidlEnumeration) -> Self {
+        WebidlCompoundType::Enumeration(a)
     }
 }
 
@@ -367,6 +384,11 @@ pub struct WebidlDictionary {
 pub struct WebidlDictionaryField {
     pub name: String,
     pub ty: WebidlTypeRef,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WebidlEnumeration {
+    pub values: Vec<String>,
 }
 
 #[derive(Debug, PartialEq, Eq)]

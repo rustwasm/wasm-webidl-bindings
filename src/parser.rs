@@ -205,6 +205,32 @@ mod tests {
     );
 
     ok!(
+        webidl_type_enum_ok_1,
+        WebidlTypeParser,
+        r#"type Blah (enum "uno" "dos" "tres")"#,
+        WebidlType {
+            name: Some("Blah".into()),
+            ty: WebidlCompoundType::Enumeration(WebidlEnumeration {
+                values: vec!["uno".into(), "dos".into(), "tres".into()],
+            }),
+        }
+    );
+    ok!(
+        webidl_type_enum_ok_2,
+        WebidlTypeParser,
+        r#"type (enum)"#,
+        WebidlType {
+            name: None,
+            ty: WebidlCompoundType::Enumeration(WebidlEnumeration { values: vec![] }),
+        }
+    );
+    err!(
+        webidl_type_enum_err_1,
+        WebidlTypeParser,
+        r#"type (enum 1 2 3)"#
+    );
+
+    ok!(
         webidl_type_ref_ok_1,
         WebidlTypeRefParser,
         "$Contact",

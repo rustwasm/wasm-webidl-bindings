@@ -18,7 +18,7 @@ pub(crate) WebidlType: A::WebidlType =
 WebidlCompoundType: A::WebidlCompoundType = {
     <a:WebidlFunction> => a.into(),
     <a:WebidlDictionary> => a.into(),
-    // <a:WebidlEnumeration> => a.into(),
+    <a:WebidlEnumeration> => a.into(),
     // <a:WebidlUnion> => a.into(),
 };
 
@@ -64,8 +64,16 @@ WebidlDictionaryField: A::WebidlDictionaryField =
         actions.webidl_dictionary_field(name, ty);
 
 WebidlDictionaryFieldName: A::WebidlDictionaryFieldName =
-    <name:r#""(([^\\"]|\\.)*)""#> =>
+    <name:QuotedString> =>
         actions.webidl_dictionary_field_name(&name[1..(name.len() - 1)]);
+
+WebidlEnumeration: A::WebidlEnumeration =
+    "(" "enum" <values:WebidlEnumerationValue*> ")" =>
+        actions.webidl_enumeration(values);
+
+WebidlEnumerationValue: A::WebidlEnumerationValue =
+    <value:QuotedString> =>
+        actions.webidl_enumeration_value(&value[1..(value.len() - 1)]);
 
 WebidlFunctionBindingsSubsection: A::WebidlFunctionBindingsSubsection =
     <bindings:FunctionBinding*> => bindings.into();
@@ -220,3 +228,5 @@ IncomingBindingExpressionBindImport: A::IncomingBindingExpressionBindImport =
 Unsigned: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();
 
 Identifier: &'input str = <r"[a-zA-Z$][a-zA-Z0-9$_]*">;
+
+QuotedString: &'input str = <r#""(([^\\"]|\\.)*)""#>;
