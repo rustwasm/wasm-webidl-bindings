@@ -83,10 +83,27 @@ WebidlFunctionBindingsSubsection: A::WebidlFunctionBindingsSubsection =
     <bindings:FunctionBinding*> => bindings.into();
 
 FunctionBinding: A::FunctionBinding = {
-    "TODO-FUNCTION-BINDING" => unimplemented!(),
-    // <a:ImportBinding> => a.into(),
+    <a:ImportBinding> => a.into(),
     // <a:ExportBinding> => a.into(),
 };
+
+pub(crate) ImportBinding: A::ImportBinding =
+    "func-binding"
+    <name:Identifier?>
+    "import"
+    <wasm_ty:WasmTypeRef>
+    <webidl_ty:WebidlTypeRef>
+    "(" "param" <params:OutgoingBindingMap> ")"
+    "(" "result" <result:IncomingBindingMap> ")" =>
+        actions.import_binding(name, wasm_ty, webidl_ty, params, result);
+
+OutgoingBindingMap: A::OutgoingBindingMap =
+    <bindings:OutgoingBindingExpression*> =>
+        actions.outgoing_binding_map(bindings);
+
+IncomingBindingMap: A::IncomingBindingMap =
+    <bindings:IncomingBindingExpression*> =>
+        actions.incoming_binding_map(bindings);
 
 pub(crate) WebidlTypeRef: A::WebidlTypeRef = {
     <a:WebidlTypeRefNamed> => a.into(),

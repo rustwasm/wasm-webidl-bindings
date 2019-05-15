@@ -100,6 +100,41 @@ impl Actions for BuildAstActions {
 
     type FunctionBinding = FunctionBinding;
 
+    type ImportBinding = ImportBinding;
+    fn import_binding(
+        &mut self,
+        name: Option<&str>,
+        wasm_ty: WasmTypeRef,
+        webidl_ty: WebidlTypeRef,
+        params: OutgoingBindingMap,
+        result: IncomingBindingMap,
+    ) -> ImportBinding {
+        let name = name.map(ToString::to_string);
+        ImportBinding {
+            name,
+            wasm_ty,
+            webidl_ty,
+            params,
+            result,
+        }
+    }
+
+    type OutgoingBindingMap = OutgoingBindingMap;
+    fn outgoing_binding_map(
+        &mut self,
+        bindings: Vec<OutgoingBindingExpression>,
+    ) -> OutgoingBindingMap {
+        OutgoingBindingMap { bindings }
+    }
+
+    type IncomingBindingMap = IncomingBindingMap;
+    fn incoming_binding_map(
+        &mut self,
+        bindings: Vec<IncomingBindingExpression>,
+    ) -> IncomingBindingMap {
+        IncomingBindingMap { bindings }
+    }
+
     type OutgoingBindingExpression = OutgoingBindingExpression;
 
     type OutgoingBindingExpressionAs = OutgoingBindingExpressionAs;
@@ -420,7 +455,35 @@ impl From<Vec<FunctionBinding>> for WebidlFunctionBindingsSubsection {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum FunctionBinding {}
+pub enum FunctionBinding {
+    Import(ImportBinding),
+    // Export(ExportBinding),
+}
+
+impl From<ImportBinding> for FunctionBinding {
+    fn from(a: ImportBinding) -> Self {
+        FunctionBinding::Import(a)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ImportBinding {
+    pub name: Option<String>,
+    pub wasm_ty: WasmTypeRef,
+    pub webidl_ty: WebidlTypeRef,
+    pub params: OutgoingBindingMap,
+    pub result: IncomingBindingMap,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct OutgoingBindingMap {
+    pub bindings: Vec<OutgoingBindingExpression>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct IncomingBindingMap {
+    pub bindings: Vec<IncomingBindingExpression>,
+}
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum OutgoingBindingExpression {
