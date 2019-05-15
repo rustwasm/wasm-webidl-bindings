@@ -231,6 +231,39 @@ mod tests {
     );
 
     ok!(
+        webidl_type_union_ok_1,
+        WebidlTypeParser,
+        "type MyUnion (union long bool)",
+        WebidlType {
+            name: Some("MyUnion".into()),
+            ty: WebidlCompoundType::Union(WebidlUnion {
+                members: vec![
+                    WebidlTypeRef::Named(WebidlTypeRefNamed {
+                        name: "long".into(),
+                    }),
+                    WebidlTypeRef::Named(WebidlTypeRefNamed {
+                        name: "bool".into(),
+                    }),
+                ],
+            })
+        }
+    );
+    ok!(
+        webidl_type_union_ok_2,
+        WebidlTypeParser,
+        "type (union)",
+        WebidlType {
+            name: None,
+            ty: WebidlCompoundType::Union(WebidlUnion { members: vec![] })
+        }
+    );
+    err!(
+        webidl_type_union_err_1,
+        WebidlTypeParser,
+        r#"type (union "hello")"#
+    );
+
+    ok!(
         webidl_type_ref_ok_1,
         WebidlTypeRefParser,
         "$Contact",

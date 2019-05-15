@@ -14,7 +14,8 @@ pub trait Actions {
 
     type WebidlCompoundType: From<Self::WebidlFunction>
         + From<Self::WebidlDictionary>
-        + From<Self::WebidlEnumeration>;
+        + From<Self::WebidlEnumeration>
+        + From<Self::WebidlUnion>;
 
     type WebidlFunction;
     fn webidl_function(
@@ -71,6 +72,9 @@ pub trait Actions {
 
     type WebidlEnumerationValue;
     fn webidl_enumeration_value(&mut self, value: &str) -> Self::WebidlEnumerationValue;
+
+    type WebidlUnion;
+    fn webidl_union(&mut self, members: Vec<Self::WebidlTypeRef>) -> Self::WebidlUnion;
 
     type WebidlFunctionBindingsSubsection: From<Vec<Self::FunctionBinding>>;
 

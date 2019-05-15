@@ -91,6 +91,11 @@ impl Actions for BuildAstActions {
         value.into()
     }
 
+    type WebidlUnion = WebidlUnion;
+    fn webidl_union(&mut self, members: Vec<WebidlTypeRef>) -> WebidlUnion {
+        WebidlUnion { members }
+    }
+
     type WebidlFunctionBindingsSubsection = WebidlFunctionBindingsSubsection;
 
     type FunctionBinding = FunctionBinding;
@@ -330,6 +335,7 @@ pub enum WebidlCompoundType {
     Function(WebidlFunction),
     Dictionary(WebidlDictionary),
     Enumeration(WebidlEnumeration),
+    Union(WebidlUnion),
 }
 
 impl From<WebidlFunction> for WebidlCompoundType {
@@ -347,6 +353,12 @@ impl From<WebidlDictionary> for WebidlCompoundType {
 impl From<WebidlEnumeration> for WebidlCompoundType {
     fn from(a: WebidlEnumeration) -> Self {
         WebidlCompoundType::Enumeration(a)
+    }
+}
+
+impl From<WebidlUnion> for WebidlCompoundType {
+    fn from(a: WebidlUnion) -> Self {
+        WebidlCompoundType::Union(a)
     }
 }
 
@@ -389,6 +401,11 @@ pub struct WebidlDictionaryField {
 #[derive(Debug, PartialEq, Eq)]
 pub struct WebidlEnumeration {
     pub values: Vec<String>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WebidlUnion {
+    pub members: Vec<WebidlTypeRef>,
 }
 
 #[derive(Debug, PartialEq, Eq)]

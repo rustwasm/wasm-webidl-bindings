@@ -19,7 +19,7 @@ WebidlCompoundType: A::WebidlCompoundType = {
     <a:WebidlFunction> => a.into(),
     <a:WebidlDictionary> => a.into(),
     <a:WebidlEnumeration> => a.into(),
-    // <a:WebidlUnion> => a.into(),
+    <a:WebidlUnion> => a.into(),
 };
 
 WebidlFunction: A::WebidlFunction = {
@@ -74,6 +74,10 @@ WebidlEnumeration: A::WebidlEnumeration =
 WebidlEnumerationValue: A::WebidlEnumerationValue =
     <value:QuotedString> =>
         actions.webidl_enumeration_value(&value[1..(value.len() - 1)]);
+
+WebidlUnion: A::WebidlUnion =
+    "(" "union" <members:WebidlTypeRef*> ")" =>
+        actions.webidl_union(members);
 
 WebidlFunctionBindingsSubsection: A::WebidlFunctionBindingsSubsection =
     <bindings:FunctionBinding*> => bindings.into();
