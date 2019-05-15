@@ -30,6 +30,150 @@ mod tests {
     }
 
     ok!(
+        explainer_example,
+        WebidlBindingsSectionParser,
+        // The Wasm type and func that are being bound are:
+        //
+        //     (type $EncodeIntoFuncWasm
+        //       (param anyref anyref i32 i32)
+        //       (result i64 i64))
+        //
+        //     (func $encodeInto
+        //       (import "TextEncoder" "encodeInto")
+        //       (type $EncodeIntoFuncWasm))
+        r#"
+        type $TextEncoderEncodeIntoResult
+          (dict
+            (field "read" unsigned_long_long)
+            (field "written" unsigned_long_long))
+
+        type $EncodeIntoFuncWebIDL
+           (func (method any)
+              (param USVString Uint8Array)
+              (result $TextEncoderEncodeIntoResult))
+
+        func-binding $encodeIntoBinding import $EncodeIntoFuncWasm $EncodeIntoFuncWebIDL
+          (param
+            (as any 0)
+            (as any 1)
+            (view uint8 2 3))
+          (result
+            (as i64 (field 0 (get 0)))
+            (as i64 (field 1 (get 0))))
+
+        bind $encodeInto $encodeIntoBinding
+        "#,
+        WebidlBindingsSection {
+            types: WebidlTypeSubsection {
+                types: vec![
+                    WebidlType {
+                        name: Some("$TextEncoderEncodeIntoResult".into()),
+                        ty: WebidlCompoundType::Dictionary(WebidlDictionary {
+                            fields: vec![
+                                WebidlDictionaryField {
+                                    name: "read".into(),
+                                    ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                                        name: "unsigned_long_long".into(),
+                                    }),
+                                },
+                                WebidlDictionaryField {
+                                    name: "written".into(),
+                                    ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                                        name: "unsigned_long_long".into(),
+                                    }),
+                                },
+                            ],
+                        }),
+                    },
+                    WebidlType {
+                        name: Some("$EncodeIntoFuncWebIDL".into()),
+                        ty: WebidlCompoundType::Function(WebidlFunction {
+                            kind: WebidlFunctionKind::Method(WebidlFunctionKindMethod {
+                                ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "any".into() }),
+                            }),
+                            params: vec![
+                                WebidlTypeRef::Named(WebidlTypeRefNamed {
+                                    name: "USVString".into()
+                                }),
+                                WebidlTypeRef::Named(WebidlTypeRefNamed {
+                                    name: "Uint8Array".into()
+                                }),
+                            ],
+                            result: Some(WebidlTypeRef::Named(WebidlTypeRefNamed {
+                                name: "$TextEncoderEncodeIntoResult".into()
+                            })),
+                        })
+                    },
+                ]
+            },
+            bindings: WebidlFunctionBindingsSubsection {
+                bindings: vec![FunctionBinding::Import(ImportBinding {
+                    name: Some("$encodeIntoBinding".into()),
+                    wasm_ty: WasmTypeRef::Named(WasmTypeRefNamed {
+                        name: "$EncodeIntoFuncWasm".into(),
+                    }),
+                    webidl_ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                        name: "$EncodeIntoFuncWebIDL".into(),
+                    }),
+                    params: OutgoingBindingMap {
+                        bindings: vec![
+                            OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
+                                ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "any".into() }),
+                                idx: 0
+                            }),
+                            OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
+                                ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "any".into() }),
+                                idx: 1
+                            }),
+                            OutgoingBindingExpression::View(OutgoingBindingExpressionView {
+                                ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                                    name: "uint8".into()
+                                }),
+                                offset: 2,
+                                length: 3
+                            })
+                        ]
+                    },
+                    result: IncomingBindingMap {
+                        bindings: vec![
+                            IncomingBindingExpression::As(IncomingBindingExpressionAs {
+                                ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "i64".into() }),
+                                expr: Box::new(IncomingBindingExpression::Field(
+                                    IncomingBindingExpressionField {
+                                        idx: 0,
+                                        expr: Box::new(IncomingBindingExpression::Get(
+                                            IncomingBindingExpressionGet { idx: 0 }
+                                        ))
+                                    }
+                                ))
+                            }),
+                            IncomingBindingExpression::As(IncomingBindingExpressionAs {
+                                ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "i64".into() }),
+                                expr: Box::new(IncomingBindingExpression::Field(
+                                    IncomingBindingExpressionField {
+                                        idx: 1,
+                                        expr: Box::new(IncomingBindingExpression::Get(
+                                            IncomingBindingExpressionGet { idx: 0 }
+                                        )),
+                                    }
+                                ))
+                            })
+                        ]
+                    }
+                })],
+                binds: vec![Bind {
+                    func: WasmFuncRef::Named(WasmFuncRefNamed {
+                        name: "$encodeInto".into()
+                    }),
+                    binding: BindingRef::Named(BindingRefNamed {
+                        name: "$encodeIntoBinding".into()
+                    })
+                }]
+            },
+        }
+    );
+
+    ok!(
         webidl_type_func_ok_1,
         WebidlTypeParser,
         "type $AddContactFuncWebIDL (func (method any) (param $Contact DOMString) (result bool))",
@@ -435,35 +579,35 @@ mod tests {
 
     ok!(
         export_binding_ref_ok_1,
-        ExportBindingRefParser,
+        BindingRefParser,
         "$Contact",
-        ExportBindingRef::Named(ExportBindingRefNamed {
+        BindingRef::Named(BindingRefNamed {
             name: "$Contact".into(),
         })
     );
     ok!(
         export_binding_ref_ok_2,
-        ExportBindingRefParser,
+        BindingRefParser,
         "42",
-        ExportBindingRef::Indexed(ExportBindingRefIndexed { idx: 42 })
+        BindingRef::Indexed(BindingRefIndexed { idx: 42 })
     );
-    err!(export_binding_ref_err, ExportBindingRefParser, "1abc");
+    err!(export_binding_ref_err, BindingRefParser, "1abc");
 
     ok!(
-        import_binding_ref_ok_1,
-        ImportBindingRefParser,
-        "$Contact",
-        ImportBindingRef::Named(ImportBindingRefNamed {
-            name: "$Contact".into(),
+        wasm_func_ref_ok_1,
+        WasmFuncRefParser,
+        "$my_func",
+        WasmFuncRef::Named(WasmFuncRefNamed {
+            name: "$my_func".into(),
         })
     );
     ok!(
-        import_binding_ref_ok_2,
-        ImportBindingRefParser,
+        wasm_func_ref_ok_2,
+        WasmFuncRefParser,
         "42",
-        ImportBindingRef::Indexed(ImportBindingRefIndexed { idx: 42 })
+        WasmFuncRef::Indexed(WasmFuncRefIndexed { idx: 42 })
     );
-    err!(import_binding_ref_err, ImportBindingRefParser, "1abc");
+    err!(wasm_func_ref_err, WasmFuncRefParser, "1abc");
 
     ok!(
         outgoing_binding_expression_as_ok_1,
@@ -659,7 +803,7 @@ mod tests {
             ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
                 name: "SomeCallback".into()
             }),
-            binding: ExportBindingRef::Named(ExportBindingRefNamed {
+            binding: BindingRef::Named(BindingRefNamed {
                 name: "SomeBinding".into()
             }),
             idx: 2,
@@ -816,7 +960,7 @@ mod tests {
         "(bind-import hi hello (get 1))",
         IncomingBindingExpression::BindImport(IncomingBindingExpressionBindImport {
             ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "hi".into() }),
-            binding: ImportBindingRef::Named(ImportBindingRefNamed {
+            binding: BindingRef::Named(BindingRefNamed {
                 name: "hello".into()
             }),
             expr: Box::new(IncomingBindingExpression::Get(

@@ -80,7 +80,9 @@ WebidlUnion: A::WebidlUnion =
         actions.webidl_union(members);
 
 WebidlFunctionBindingsSubsection: A::WebidlFunctionBindingsSubsection =
-    <bindings:FunctionBinding*> => bindings.into();
+    <bindings:FunctionBinding*>
+    <binds:Bind*> =>
+        actions.webidl_function_bindings_subsection(bindings, binds);
 
 FunctionBinding: A::FunctionBinding = {
     <a:ImportBinding> => a.into(),
@@ -106,6 +108,10 @@ pub(crate) ExportBinding: A::ExportBinding =
     "(" "param" <params:IncomingBindingMap> ")"
     "(" "result" <result:OutgoingBindingMap> ")" =>
         actions.export_binding(name, wasm_ty, webidl_ty, params, result);
+
+pub(crate) Bind: A::Bind =
+    "bind" <func:WasmFuncRef> <binding:BindingRef> =>
+        actions.bind(func, binding);
 
 OutgoingBindingMap: A::OutgoingBindingMap =
     <bindings:OutgoingBindingExpression*> =>
@@ -141,31 +147,31 @@ WasmTypeRefIndexed: A::WasmTypeRefIndexed =
     <idx: Unsigned> =>
         actions.wasm_type_ref_indexed(idx);
 
-pub(crate) ExportBindingRef: A::ExportBindingRef = {
-    <a:ExportBindingRefNamed> => a.into(),
-    <a:ExportBindingRefIndexed> => a.into(),
+pub(crate) WasmFuncRef: A::WasmFuncRef = {
+    <a:WasmFuncRefNamed> => a.into(),
+    <a:WasmFuncRefIndexed> => a.into(),
 };
 
-ExportBindingRefNamed: A::ExportBindingRefNamed =
+WasmFuncRefNamed: A::WasmFuncRefNamed =
     <s:Identifier> =>
-        actions.export_binding_ref_named(s);
+        actions.wasm_func_ref_named(s);
 
-ExportBindingRefIndexed: A::ExportBindingRefIndexed =
+WasmFuncRefIndexed: A::WasmFuncRefIndexed =
     <idx: Unsigned> =>
-        actions.export_binding_ref_indexed(idx);
+        actions.wasm_func_ref_indexed(idx);
 
-pub(crate) ImportBindingRef: A::ImportBindingRef = {
-    <a:ImportBindingRefNamed> => a.into(),
-    <a:ImportBindingRefIndexed> => a.into(),
+pub(crate) BindingRef: A::BindingRef = {
+    <a:BindingRefNamed> => a.into(),
+    <a:BindingRefIndexed> => a.into(),
 };
 
-ImportBindingRefNamed: A::ImportBindingRefNamed =
+BindingRefNamed: A::BindingRefNamed =
     <s:Identifier> =>
-        actions.import_binding_ref_named(s);
+        actions.binding_ref_named(s);
 
-ImportBindingRefIndexed: A::ImportBindingRefIndexed =
+BindingRefIndexed: A::BindingRefIndexed =
     <idx: Unsigned> =>
-        actions.import_binding_ref_indexed(idx);
+        actions.binding_ref_indexed(idx);
 
 pub OutgoingBindingExpression: A::OutgoingBindingExpression = {
     <a:OutgoingBindingExpressionAs> => a.into(),
@@ -207,7 +213,7 @@ OutgoingBindingExpressionDict: A::OutgoingBindingExpressionDict =
         actions.outgoing_binding_expression_dict(ty, fields);
 
 OutgoingBindingExpressionBindExport: A::OutgoingBindingExpressionBindExport =
-    "(" "bind-export" <ty:WebidlTypeRef> <binding:ExportBindingRef> <idx:Unsigned> ")" =>
+    "(" "bind-export" <ty:WebidlTypeRef> <binding:BindingRef> <idx:Unsigned> ")" =>
         actions.outgoing_binding_expression_bind_export(ty, binding, idx);
 
 pub IncomingBindingExpression: A::IncomingBindingExpression = {
@@ -253,7 +259,7 @@ IncomingBindingExpressionField: A::IncomingBindingExpressionField =
         actions.incoming_binding_expression_field(idx, expr);
 
 IncomingBindingExpressionBindImport: A::IncomingBindingExpressionBindImport =
-    "(" "bind-import" <ty:WasmTypeRef> <binding:ImportBindingRef> <expr:IncomingBindingExpression> ")" =>
+    "(" "bind-import" <ty:WasmTypeRef> <binding:BindingRef> <expr:IncomingBindingExpression> ")" =>
         actions.incoming_binding_expression_bind_import(ty, binding, expr);
 
 Unsigned: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();

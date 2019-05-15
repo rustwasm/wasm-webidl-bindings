@@ -76,7 +76,12 @@ pub trait Actions {
     type WebidlUnion;
     fn webidl_union(&mut self, members: Vec<Self::WebidlTypeRef>) -> Self::WebidlUnion;
 
-    type WebidlFunctionBindingsSubsection: From<Vec<Self::FunctionBinding>>;
+    type WebidlFunctionBindingsSubsection;
+    fn webidl_function_bindings_subsection(
+        &mut self,
+        bindings: Vec<Self::FunctionBinding>,
+        binds: Vec<Self::Bind>,
+    ) -> Self::WebidlFunctionBindingsSubsection;
 
     type FunctionBinding: From<Self::ImportBinding> + From<Self::ExportBinding>;
 
@@ -99,6 +104,9 @@ pub trait Actions {
         params: Self::IncomingBindingMap,
         result: Self::OutgoingBindingMap,
     ) -> Self::ExportBinding;
+
+    type Bind;
+    fn bind(&mut self, func: Self::WasmFuncRef, binding: Self::BindingRef) -> Self::Bind;
 
     type OutgoingBindingMap;
     fn outgoing_binding_map(
@@ -177,7 +185,7 @@ pub trait Actions {
     fn outgoing_binding_expression_bind_export(
         &mut self,
         ty: Self::WebidlTypeRef,
-        binding: Self::ExportBindingRef,
+        binding: Self::BindingRef,
         idx: u32,
     ) -> Self::OutgoingBindingExpressionBindExport;
 
@@ -231,7 +239,7 @@ pub trait Actions {
     fn incoming_binding_expression_bind_import(
         &mut self,
         ty: Self::WasmTypeRef,
-        binding: Self::ImportBindingRef,
+        binding: Self::BindingRef,
         expr: Self::IncomingBindingExpression,
     ) -> Self::IncomingBindingExpressionBindImport;
 
@@ -251,19 +259,19 @@ pub trait Actions {
     type WasmTypeRefIndexed;
     fn wasm_type_ref_indexed(&mut self, idx: u32) -> Self::WasmTypeRefIndexed;
 
-    type ExportBindingRef: From<Self::ExportBindingRefNamed> + From<Self::ExportBindingRefIndexed>;
+    type WasmFuncRef: From<Self::WasmFuncRefNamed> + From<Self::WasmFuncRefIndexed>;
 
-    type ExportBindingRefNamed;
-    fn export_binding_ref_named(&mut self, name: &str) -> Self::ExportBindingRefNamed;
+    type WasmFuncRefNamed;
+    fn wasm_func_ref_named(&mut self, name: &str) -> Self::WasmFuncRefNamed;
 
-    type ExportBindingRefIndexed;
-    fn export_binding_ref_indexed(&mut self, idx: u32) -> Self::ExportBindingRefIndexed;
+    type WasmFuncRefIndexed;
+    fn wasm_func_ref_indexed(&mut self, idx: u32) -> Self::WasmFuncRefIndexed;
 
-    type ImportBindingRef: From<Self::ImportBindingRefNamed> + From<Self::ImportBindingRefIndexed>;
+    type BindingRef: From<Self::BindingRefNamed> + From<Self::BindingRefIndexed>;
 
-    type ImportBindingRefNamed;
-    fn import_binding_ref_named(&mut self, name: &str) -> Self::ImportBindingRefNamed;
+    type BindingRefNamed;
+    fn binding_ref_named(&mut self, name: &str) -> Self::BindingRefNamed;
 
-    type ImportBindingRefIndexed;
-    fn import_binding_ref_indexed(&mut self, idx: u32) -> Self::ImportBindingRefIndexed;
+    type BindingRefIndexed;
+    fn binding_ref_indexed(&mut self, idx: u32) -> Self::BindingRefIndexed;
 }

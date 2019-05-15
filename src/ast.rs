@@ -97,6 +97,13 @@ impl Actions for BuildAstActions {
     }
 
     type WebidlFunctionBindingsSubsection = WebidlFunctionBindingsSubsection;
+    fn webidl_function_bindings_subsection(
+        &mut self,
+        bindings: Vec<FunctionBinding>,
+        binds: Vec<Bind>,
+    ) -> WebidlFunctionBindingsSubsection {
+        WebidlFunctionBindingsSubsection { bindings, binds }
+    }
 
     type FunctionBinding = FunctionBinding;
 
@@ -136,6 +143,11 @@ impl Actions for BuildAstActions {
             params,
             result,
         }
+    }
+
+    type Bind = Bind;
+    fn bind(&mut self, func: WasmFuncRef, binding: BindingRef) -> Bind {
+        Bind { func, binding }
     }
 
     type OutgoingBindingMap = OutgoingBindingMap;
@@ -226,7 +238,7 @@ impl Actions for BuildAstActions {
     fn outgoing_binding_expression_bind_export(
         &mut self,
         ty: WebidlTypeRef,
-        binding: ExportBindingRef,
+        binding: BindingRef,
         idx: u32,
     ) -> OutgoingBindingExpressionBindExport {
         OutgoingBindingExpressionBindExport { ty, binding, idx }
@@ -301,7 +313,7 @@ impl Actions for BuildAstActions {
     fn incoming_binding_expression_bind_import(
         &mut self,
         ty: WasmTypeRef,
-        binding: ImportBindingRef,
+        binding: BindingRef,
         expr: IncomingBindingExpression,
     ) -> IncomingBindingExpressionBindImport {
         let expr = Box::new(expr);
@@ -334,30 +346,30 @@ impl Actions for BuildAstActions {
         WasmTypeRefIndexed { idx }
     }
 
-    type ExportBindingRef = ExportBindingRef;
+    type WasmFuncRef = WasmFuncRef;
 
-    type ExportBindingRefNamed = ExportBindingRefNamed;
-    fn export_binding_ref_named(&mut self, name: &str) -> ExportBindingRefNamed {
+    type WasmFuncRefNamed = WasmFuncRefNamed;
+    fn wasm_func_ref_named(&mut self, name: &str) -> WasmFuncRefNamed {
         let name = name.to_string();
-        ExportBindingRefNamed { name }
+        WasmFuncRefNamed { name }
     }
 
-    type ExportBindingRefIndexed = ExportBindingRefIndexed;
-    fn export_binding_ref_indexed(&mut self, idx: u32) -> ExportBindingRefIndexed {
-        ExportBindingRefIndexed { idx }
+    type WasmFuncRefIndexed = WasmFuncRefIndexed;
+    fn wasm_func_ref_indexed(&mut self, idx: u32) -> WasmFuncRefIndexed {
+        WasmFuncRefIndexed { idx }
     }
 
-    type ImportBindingRef = ImportBindingRef;
+    type BindingRef = BindingRef;
 
-    type ImportBindingRefNamed = ImportBindingRefNamed;
-    fn import_binding_ref_named(&mut self, name: &str) -> ImportBindingRefNamed {
+    type BindingRefNamed = BindingRefNamed;
+    fn binding_ref_named(&mut self, name: &str) -> BindingRefNamed {
         let name = name.to_string();
-        ImportBindingRefNamed { name }
+        BindingRefNamed { name }
     }
 
-    type ImportBindingRefIndexed = ImportBindingRefIndexed;
-    fn import_binding_ref_indexed(&mut self, idx: u32) -> ImportBindingRefIndexed {
-        ImportBindingRefIndexed { idx }
+    type BindingRefIndexed = BindingRefIndexed;
+    fn binding_ref_indexed(&mut self, idx: u32) -> BindingRefIndexed {
+        BindingRefIndexed { idx }
     }
 }
 
@@ -465,12 +477,7 @@ pub struct WebidlUnion {
 #[derive(Debug, PartialEq, Eq)]
 pub struct WebidlFunctionBindingsSubsection {
     pub bindings: Vec<FunctionBinding>,
-}
-
-impl From<Vec<FunctionBinding>> for WebidlFunctionBindingsSubsection {
-    fn from(bindings: Vec<FunctionBinding>) -> Self {
-        WebidlFunctionBindingsSubsection { bindings }
-    }
+    pub binds: Vec<Bind>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -507,6 +514,12 @@ pub struct ExportBinding {
     pub webidl_ty: WebidlTypeRef,
     pub params: IncomingBindingMap,
     pub result: OutgoingBindingMap,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct Bind {
+    pub func: WasmFuncRef,
+    pub binding: BindingRef,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -627,7 +640,7 @@ pub struct OutgoingBindingExpressionDict {
 #[derive(Debug, PartialEq, Eq)]
 pub struct OutgoingBindingExpressionBindExport {
     pub ty: WebidlTypeRef,
-    pub binding: ExportBindingRef,
+    pub binding: BindingRef,
     pub idx: u32,
 }
 
@@ -722,7 +735,7 @@ pub struct IncomingBindingExpressionField {
 #[derive(Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionBindImport {
     pub ty: WasmTypeRef,
-    pub binding: ImportBindingRef,
+    pub binding: BindingRef,
     pub expr: Box<IncomingBindingExpression>,
 }
 
@@ -783,57 +796,57 @@ pub struct WasmTypeRefIndexed {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum ExportBindingRef {
-    Named(ExportBindingRefNamed),
-    Indexed(ExportBindingRefIndexed),
+pub enum WasmFuncRef {
+    Named(WasmFuncRefNamed),
+    Indexed(WasmFuncRefIndexed),
 }
 
-impl From<ExportBindingRefNamed> for ExportBindingRef {
-    fn from(n: ExportBindingRefNamed) -> Self {
-        ExportBindingRef::Named(n)
+impl From<WasmFuncRefNamed> for WasmFuncRef {
+    fn from(n: WasmFuncRefNamed) -> Self {
+        WasmFuncRef::Named(n)
     }
 }
 
-impl From<ExportBindingRefIndexed> for ExportBindingRef {
-    fn from(i: ExportBindingRefIndexed) -> Self {
-        ExportBindingRef::Indexed(i)
+impl From<WasmFuncRefIndexed> for WasmFuncRef {
+    fn from(i: WasmFuncRefIndexed) -> Self {
+        WasmFuncRef::Indexed(i)
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ExportBindingRefNamed {
+pub struct WasmFuncRefNamed {
     pub name: String,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ExportBindingRefIndexed {
+pub struct WasmFuncRefIndexed {
     pub idx: u32,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum ImportBindingRef {
-    Named(ImportBindingRefNamed),
-    Indexed(ImportBindingRefIndexed),
+pub enum BindingRef {
+    Named(BindingRefNamed),
+    Indexed(BindingRefIndexed),
 }
 
-impl From<ImportBindingRefNamed> for ImportBindingRef {
-    fn from(n: ImportBindingRefNamed) -> Self {
-        ImportBindingRef::Named(n)
+impl From<BindingRefNamed> for BindingRef {
+    fn from(n: BindingRefNamed) -> Self {
+        BindingRef::Named(n)
     }
 }
 
-impl From<ImportBindingRefIndexed> for ImportBindingRef {
-    fn from(i: ImportBindingRefIndexed) -> Self {
-        ImportBindingRef::Indexed(i)
+impl From<BindingRefIndexed> for BindingRef {
+    fn from(i: BindingRefIndexed) -> Self {
+        BindingRef::Indexed(i)
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ImportBindingRefNamed {
+pub struct BindingRefNamed {
     pub name: String,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ImportBindingRefIndexed {
+pub struct BindingRefIndexed {
     pub idx: u32,
 }
