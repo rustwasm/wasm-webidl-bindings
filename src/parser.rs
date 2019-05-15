@@ -333,6 +333,75 @@ mod tests {
     );
 
     ok!(
+        export_binding_ok_1,
+        ExportBindingParser,
+        "func-binding Yoyo export MyWasmFunc MyWebidlFunc (param (as i32 (get 0))) (result (as any 0))",
+        ExportBinding {
+            name: Some("Yoyo".into()),
+            wasm_ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "MyWasmFunc".into() }),
+            webidl_ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "MyWebidlFunc".into() }),
+            params: IncomingBindingMap {
+                bindings: vec![IncomingBindingExpression::As(IncomingBindingExpressionAs {
+                    ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "i32".into() }),
+                    expr: Box::new(IncomingBindingExpression::Get(IncomingBindingExpressionGet { idx: 0 })),
+                })],
+            },
+            result: OutgoingBindingMap {
+                bindings: vec![OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
+                    ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "any".into() }),
+                    idx: 0,
+                })],
+            },
+        }
+    );
+    ok!(
+        export_binding_ok_2,
+        ExportBindingParser,
+        "func-binding export MyWasmFunc MyWebidlFunc (param) (result)",
+        ExportBinding {
+            name: None,
+            wasm_ty: WasmTypeRef::Named(WasmTypeRefNamed {
+                name: "MyWasmFunc".into()
+            }),
+            webidl_ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
+                name: "MyWebidlFunc".into()
+            }),
+            params: IncomingBindingMap { bindings: vec![] },
+            result: OutgoingBindingMap { bindings: vec![] },
+        }
+    );
+    err!(
+        export_binding_err_1,
+        ExportBindingParser,
+        "func-binding export MyWasmFunc MyWebidlFunc (param)"
+    );
+    err!(
+        export_binding_err_2,
+        ExportBindingParser,
+        "func-binding export MyWasmFunc MyWebidlFunc (result)"
+    );
+    err!(
+        export_binding_err_3,
+        ExportBindingParser,
+        "func-binding export MyWasmFunc (param) (result)"
+    );
+    err!(
+        export_binding_err_4,
+        ExportBindingParser,
+        "func-binding export MyWebidlFunc (param) (result)"
+    );
+    err!(
+        export_binding_err_5,
+        ExportBindingParser,
+        "func-binding MyWasmFunc MyWebidlFunc (param) (result)"
+    );
+    err!(
+        export_binding_err_6,
+        ExportBindingParser,
+        "export MyWasmFunc MyWebidlFunc (param) (result)"
+    );
+
+    ok!(
         webidl_type_ref_ok_1,
         WebidlTypeRefParser,
         "$Contact",

@@ -78,7 +78,7 @@ pub trait Actions {
 
     type WebidlFunctionBindingsSubsection: From<Vec<Self::FunctionBinding>>;
 
-    type FunctionBinding: From<Self::ImportBinding>;
+    type FunctionBinding: From<Self::ImportBinding> + From<Self::ExportBinding>;
 
     type ImportBinding;
     fn import_binding(
@@ -89,6 +89,16 @@ pub trait Actions {
         params: Self::OutgoingBindingMap,
         result: Self::IncomingBindingMap,
     ) -> Self::ImportBinding;
+
+    type ExportBinding;
+    fn export_binding(
+        &mut self,
+        name: Option<&str>,
+        wasm_ty: Self::WasmTypeRef,
+        webidl_ty: Self::WebidlTypeRef,
+        params: Self::IncomingBindingMap,
+        result: Self::OutgoingBindingMap,
+    ) -> Self::ExportBinding;
 
     type OutgoingBindingMap;
     fn outgoing_binding_map(

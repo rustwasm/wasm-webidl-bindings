@@ -119,6 +119,25 @@ impl Actions for BuildAstActions {
         }
     }
 
+    type ExportBinding = ExportBinding;
+    fn export_binding(
+        &mut self,
+        name: Option<&str>,
+        wasm_ty: WasmTypeRef,
+        webidl_ty: WebidlTypeRef,
+        params: IncomingBindingMap,
+        result: OutgoingBindingMap,
+    ) -> ExportBinding {
+        let name = name.map(ToString::to_string);
+        ExportBinding {
+            name,
+            wasm_ty,
+            webidl_ty,
+            params,
+            result,
+        }
+    }
+
     type OutgoingBindingMap = OutgoingBindingMap;
     fn outgoing_binding_map(
         &mut self,
@@ -457,12 +476,18 @@ impl From<Vec<FunctionBinding>> for WebidlFunctionBindingsSubsection {
 #[derive(Debug, PartialEq, Eq)]
 pub enum FunctionBinding {
     Import(ImportBinding),
-    // Export(ExportBinding),
+    Export(ExportBinding),
 }
 
 impl From<ImportBinding> for FunctionBinding {
     fn from(a: ImportBinding) -> Self {
         FunctionBinding::Import(a)
+    }
+}
+
+impl From<ExportBinding> for FunctionBinding {
+    fn from(a: ExportBinding) -> Self {
+        FunctionBinding::Export(a)
     }
 }
 
@@ -473,6 +498,15 @@ pub struct ImportBinding {
     pub webidl_ty: WebidlTypeRef,
     pub params: OutgoingBindingMap,
     pub result: IncomingBindingMap,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ExportBinding {
+    pub name: Option<String>,
+    pub wasm_ty: WasmTypeRef,
+    pub webidl_ty: WebidlTypeRef,
+    pub params: IncomingBindingMap,
+    pub result: OutgoingBindingMap,
 }
 
 #[derive(Debug, PartialEq, Eq)]
