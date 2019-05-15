@@ -1,6 +1,22 @@
 #![allow(unused_imports, dead_code, missing_debug_implementations)]
 
+use crate::actions::Actions;
+
 include!(concat!(env!("OUT_DIR"), "/grammar.rs"));
+
+/// Parse the given straw proposal text format input.
+///
+/// Supply an `Actions` to do something while parsing. If you want to construct
+/// the default AST, use `wasm_webidl_bindings::ast::BuildAstActions`.
+pub fn parse<A>(actions: &mut A, input: &str) -> Result<A::WebidlBindingsSection, failure::Error>
+where
+    A: Actions,
+{
+    let ast = WebidlBindingsSectionParser::new()
+        .parse(actions, input)
+        .map_err(|e| failure::format_err!("{}", e))?;
+    Ok(ast)
+}
 
 #[cfg(test)]
 mod tests {

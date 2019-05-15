@@ -1,10 +1,9 @@
-use crate::actions::Actions;
 use std::str::FromStr;
 
 grammar<A>(actions: &mut A)
-    where A: Actions;
+    where A: crate::actions::Actions;
 
-pub WebidlBindingsSection: A::WebidlBindingsSection =
+pub(crate) WebidlBindingsSection: A::WebidlBindingsSection =
     <types:WebidlTypeSubsection> <bindings:WebidlFunctionBindingsSubsection> =>
         actions.webidl_bindings_section(types, bindings);
 
@@ -173,7 +172,7 @@ BindingRefIndexed: A::BindingRefIndexed =
     <idx: Unsigned> =>
         actions.binding_ref_indexed(idx);
 
-pub OutgoingBindingExpression: A::OutgoingBindingExpression = {
+pub(crate) OutgoingBindingExpression: A::OutgoingBindingExpression = {
     <a:OutgoingBindingExpressionAs> => a.into(),
     <a:OutgoingBindingExpressionUtf8Str> => a.into(),
     <a:OutgoingBindingExpressionUtf8CStr> => a.into(),
@@ -216,7 +215,7 @@ OutgoingBindingExpressionBindExport: A::OutgoingBindingExpressionBindExport =
     "(" "bind-export" <ty:WebidlTypeRef> <binding:BindingRef> <idx:Unsigned> ")" =>
         actions.outgoing_binding_expression_bind_export(ty, binding, idx);
 
-pub IncomingBindingExpression: A::IncomingBindingExpression = {
+pub(crate) IncomingBindingExpression: A::IncomingBindingExpression = {
     <a:IncomingBindingExpressionGet> => a.into(),
     <a:IncomingBindingExpressionAs> => a.into(),
     <a:IncomingBindingExpressionAllocUtf8Str> => a.into(),
