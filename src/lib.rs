@@ -61,18 +61,6 @@ println!("The parsed AST is {:#?}", ast);
 # }
 ```
 
-## TODO
-
-* [ ] Write an AST out as straw proposal text format.
-
-* [ ] Validate and canonicalize ASTs.
-
-* [ ] Read a straw proposal binary encoding.
-
-* [ ] Write a straw proposal binary encoding.
-
-* [ ] Support optional `type=` and `idx=` named parameters in the text format.
-
  */
 #![deny(missing_debug_implementations)]
 
