@@ -1,6 +1,6 @@
 /*!
 
-**Read and write the Wasm WebIDL bindings custom section.**
+**Read, write, and manipulate the Wasm WebIDL bindings custom section.**
 
 [![](https://docs.rs/wasm-webidl-bindings/badge.svg)](https://docs.rs/wasm-webidl-bindings/)
 [![](https://img.shields.io/crates/v/wasm-webidl-bindings.svg)](https://crates.io/crates/wasm-webidl-bindings)
