@@ -1,8 +1,8 @@
 #![allow(unused_imports, dead_code, missing_debug_implementations)]
 
-use crate::actions::Actions;
+use crate::text::actions::Actions;
 
-include!(concat!(env!("OUT_DIR"), "/grammar.rs"));
+include!(concat!(env!("OUT_DIR"), "/text/grammar.rs"));
 
 /// Parse the given straw proposal text format input.
 ///

@@ -1,4 +1,4 @@
-use crate::actions::Actions;
+use crate::text::Actions;
 
 #[derive(Debug, Default)]
 pub struct BuildAstActions;

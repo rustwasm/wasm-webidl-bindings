@@ -10,7 +10,7 @@
 
 ### What's Inside
 
-* A parser for the straw proposal text format. See `src/grammar.lalrpop`.
+* A parser for the straw proposal text format. See `src/text/grammar.lalrpop`.
 
 * A set of AST types for representing and manipulating WebIDL bindings. See
   `src/ast.rs`.
@@ -20,7 +20,7 @@
 #### Parsing the Straw Proposal Text Format
 
 ```rust
-use wasm_webidl_bindings::{ast::BuildAstActions, parser::parse};
+use wasm_webidl_bindings::{ast::BuildAstActions, text};
 
 let mut actions = BuildAstActions::default();
 
@@ -33,7 +33,7 @@ let mut actions = BuildAstActions::default();
 //     (func $encodeInto
 //       (import "TextEncoder" "encodeInto")
 //       (type $EncodeIntoFuncWasm))
-let ast = parse(&mut actions, r#"
+let ast = text::parse(&mut actions, r#"
     type $TextEncoderEncodeIntoResult
       (dict
         (field "read" unsigned_long_long)
