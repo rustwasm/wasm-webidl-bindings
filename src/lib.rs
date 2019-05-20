@@ -14,13 +14,16 @@
 * A set of AST types for representing and manipulating WebIDL bindings. See
   `src/ast.rs`.
 
+* (WIP) An encoder for the straw proposal binary format. See the implementation
+  at `src/binary/encode.rs` and details on the format at `BINARY.md`.
+
 ## Example
 
-### Parsing the Straw Proposal Text Format
+### Parsing the Text Format and Encoding it in the Binary Format
 
 ```rust
 # fn foo() -> Result<(), failure::Error> {
-use wasm_webidl_bindings::{ast::BuildAstActions, text};
+use wasm_webidl_bindings::{ast::BuildAstActions, binary, text};
 
 let mut actions = BuildAstActions::default();
 
@@ -57,6 +60,11 @@ let ast = text::parse(&mut actions, r#"
 "#)?;
 
 println!("The parsed AST is {:#?}", ast);
+
+let mut buf = vec![];
+binary::encode(&ast, &mut buf)?;
+
+println!("The encoded bindings section is {} bytes long", buf.len());
 # Ok(())
 # }
 ```
@@ -65,4 +73,5 @@ println!("The parsed AST is {:#?}", ast);
 #![deny(missing_debug_implementations)]
 
 pub mod ast;
+pub mod binary;
 pub mod text;
