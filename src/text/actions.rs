@@ -203,7 +203,7 @@ pub trait Actions {
     type IncomingBindingExpressionAs;
     fn incoming_binding_expression_as(
         &mut self,
-        ty: Self::WasmTypeRef,
+        ty: Self::WasmValType,
         expr: Self::IncomingBindingExpression,
     ) -> Self::IncomingBindingExpressionAs;
 
@@ -251,13 +251,13 @@ pub trait Actions {
     type WebidlTypeRefIndexed;
     fn webidl_type_ref_indexed(&mut self, idx: u32) -> Self::WebidlTypeRefIndexed;
 
-    type WasmTypeRef: From<Self::WasmTypeRefNamed> + From<Self::WasmTypeRefIndexed>;
-
-    type WasmTypeRefNamed;
-    fn wasm_type_ref_named(&mut self, name: &str) -> Self::WasmTypeRefNamed;
-
-    type WasmTypeRefIndexed;
-    fn wasm_type_ref_indexed(&mut self, idx: u32) -> Self::WasmTypeRefIndexed;
+    type WasmValType;
+    fn wasm_val_type_i32(&mut self) -> Self::WasmValType;
+    fn wasm_val_type_i64(&mut self) -> Self::WasmValType;
+    fn wasm_val_type_f32(&mut self) -> Self::WasmValType;
+    fn wasm_val_type_f64(&mut self) -> Self::WasmValType;
+    fn wasm_val_type_v128(&mut self) -> Self::WasmValType;
+    fn wasm_val_type_anyref(&mut self) -> Self::WasmValType;
 
     type WasmFuncTypeRef: From<Self::WasmFuncTypeRefNamed> + From<Self::WasmFuncTypeRefIndexed>;
 

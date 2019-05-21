@@ -133,18 +133,14 @@ WebidlTypeRefIndexed: A::WebidlTypeRefIndexed =
     <idx: Unsigned> =>
         actions.webidl_type_ref_indexed(idx);
 
-pub(crate) WasmTypeRef: A::WasmTypeRef = {
-    <a:WasmTypeRefNamed> => a.into(),
-    <a:WasmTypeRefIndexed> => a.into(),
+pub(crate) WasmValType: A::WasmValType = {
+    "i32" => actions.wasm_val_type_i32(),
+    "i64" => actions.wasm_val_type_i64(),
+    "f32" => actions.wasm_val_type_f32(),
+    "f64" => actions.wasm_val_type_f64(),
+    "v128" => actions.wasm_val_type_v128(),
+    "anyref" => actions.wasm_val_type_anyref(),
 };
-
-WasmTypeRefNamed: A::WasmTypeRefNamed =
-    <s:Identifier> =>
-        actions.wasm_type_ref_named(s);
-
-WasmTypeRefIndexed: A::WasmTypeRefIndexed =
-    <idx: Unsigned> =>
-        actions.wasm_type_ref_indexed(idx);
 
 pub(crate) WasmFuncTypeRef: A::WasmFuncTypeRef = {
     <a:WasmFuncTypeRefNamed> => a.into(),
@@ -248,7 +244,7 @@ IncomingBindingExpressionGet: A::IncomingBindingExpressionGet =
         actions.incoming_binding_expression_get(idx);
 
 IncomingBindingExpressionAs: A::IncomingBindingExpressionAs =
-    "(" "as" <ty:WasmTypeRef> <expr:IncomingBindingExpression> ")" =>
+    "(" "as" <ty:WasmValType> <expr:IncomingBindingExpression> ")" =>
         actions.incoming_binding_expression_as(ty, expr);
 
 IncomingBindingExpressionAllocUtf8Str: A::IncomingBindingExpressionAllocUtf8Str =

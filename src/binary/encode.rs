@@ -188,11 +188,15 @@ impl<W: ?Sized + io::Write> Encode<W> for ast::ExportBinding {
     }
 }
 
-impl<W: ?Sized + io::Write> Encode<W> for ast::WasmTypeRef {
+impl<W: ?Sized + io::Write> Encode<W> for walrus::ValType {
     fn encode(&self, w: &mut W) -> io::Result<()> {
         match self {
-            ast::WasmTypeRef::Indexed(i) => w.uleb(i.idx as u32),
-            ast::WasmTypeRef::Named(_) => panic!("can only encode canonicalized ASTs"),
+            walrus::ValType::I32 => w.byte(0x7f),
+            walrus::ValType::I64 => w.byte(0x7e),
+            walrus::ValType::F32 => w.byte(0x7d),
+            walrus::ValType::F64 => w.byte(0x7c),
+            walrus::ValType::V128 => w.byte(0x7b),
+            walrus::ValType::Anyref => w.byte(0x6f),
         }
     }
 }
@@ -447,9 +451,7 @@ mod tests {
                         result: IncomingBindingMap {
                             bindings: vec![
                                 IncomingBindingExpression::As(IncomingBindingExpressionAs {
-                                    ty: WasmTypeRef::Indexed(WasmTypeRefIndexed {
-                                        idx: 11,
-                                    }),
+                                    ty: walrus::ValType::I32,
                                     expr: Box::new(IncomingBindingExpression::Field(
                                         IncomingBindingExpressionField {
                                             idx: 0,
@@ -460,9 +462,7 @@ mod tests {
                                     ))
                                 }),
                                 IncomingBindingExpression::As(IncomingBindingExpressionAs {
-                                    ty: WasmTypeRef::Indexed(WasmTypeRefIndexed {
-                                        idx: 12,
-                                    }),
+                                    ty: walrus::ValType::I32,
                                     expr: Box::new(IncomingBindingExpression::Field(
                                         IncomingBindingExpressionField {
                                             idx: 1,
@@ -527,13 +527,13 @@ mod tests {
                 // results
                 2,
                 // as
-                1, 11,
+                1, 0x7f,
                 // field
                 5, 0,
                 // get
                 0, 0,
                 // as
-                1, 12,
+                1, 0x7f,
                 // field
                 5, 1,
                 // get
@@ -1017,18 +1017,16 @@ mod tests {
         );
         incoming_binding_expression_as(
             IncomingBindingExpression::As(IncomingBindingExpressionAs {
-                ty: WasmTypeRef::Indexed(WasmTypeRefIndexed { idx: 1 }),
+                ty: walrus::ValType::I32,
                 expr: Box::new(IncomingBindingExpression::Get(IncomingBindingExpressionGet {
                     idx: 2,
                 })),
             }),
             [
                 // as
-                1,
-                1,
+                1, 0x7f,
                 // get
-                0,
-                2,
+                0, 2,
             ],
         );
         incoming_binding_expression_alloc_utf8_str(

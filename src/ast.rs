@@ -254,7 +254,7 @@ impl Actions for BuildAstActions {
     type IncomingBindingExpressionAs = IncomingBindingExpressionAs;
     fn incoming_binding_expression_as(
         &mut self,
-        ty: WasmTypeRef,
+        ty: walrus::ValType,
         expr: IncomingBindingExpression,
     ) -> IncomingBindingExpressionAs {
         let expr = Box::new(expr);
@@ -333,17 +333,24 @@ impl Actions for BuildAstActions {
         WebidlTypeRefIndexed { idx }
     }
 
-    type WasmTypeRef = WasmTypeRef;
-
-    type WasmTypeRefNamed = WasmTypeRefNamed;
-    fn wasm_type_ref_named(&mut self, name: &str) -> WasmTypeRefNamed {
-        let name = name.to_string();
-        WasmTypeRefNamed { name }
+    type WasmValType = walrus::ValType;
+    fn wasm_val_type_i32(&mut self) -> walrus::ValType {
+        walrus::ValType::I32
     }
-
-    type WasmTypeRefIndexed = WasmTypeRefIndexed;
-    fn wasm_type_ref_indexed(&mut self, idx: u32) -> WasmTypeRefIndexed {
-        WasmTypeRefIndexed { idx }
+    fn wasm_val_type_i64(&mut self) -> walrus::ValType {
+        walrus::ValType::I64
+    }
+    fn wasm_val_type_f32(&mut self) -> walrus::ValType {
+        walrus::ValType::F32
+    }
+    fn wasm_val_type_f64(&mut self) -> walrus::ValType {
+        walrus::ValType::F64
+    }
+    fn wasm_val_type_v128(&mut self) -> walrus::ValType {
+        walrus::ValType::V128
+    }
+    fn wasm_val_type_anyref(&mut self) -> walrus::ValType {
+        walrus::ValType::Anyref
     }
 
     type WasmFuncTypeRef = WasmFuncTypeRef;
@@ -717,7 +724,7 @@ pub struct IncomingBindingExpressionGet {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionAs {
-    pub ty: WasmTypeRef,
+    pub ty: walrus::ValType,
     pub expr: Box<IncomingBindingExpression>,
 }
 
@@ -777,34 +784,6 @@ pub struct WebidlTypeRefNamed {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct WebidlTypeRefIndexed {
-    pub idx: u32,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub enum WasmTypeRef {
-    Named(WasmTypeRefNamed),
-    Indexed(WasmTypeRefIndexed),
-}
-
-impl From<WasmTypeRefNamed> for WasmTypeRef {
-    fn from(n: WasmTypeRefNamed) -> Self {
-        WasmTypeRef::Named(n)
-    }
-}
-
-impl From<WasmTypeRefIndexed> for WasmTypeRef {
-    fn from(i: WasmTypeRefIndexed) -> Self {
-        WasmTypeRef::Indexed(i)
-    }
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct WasmTypeRefNamed {
-    pub name: String,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct WasmTypeRefIndexed {
     pub idx: u32,
 }
 

@@ -153,7 +153,7 @@ mod tests {
                     result: IncomingBindingMap {
                         bindings: vec![
                             IncomingBindingExpression::As(IncomingBindingExpressionAs {
-                                ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "i64".into() }),
+                                ty: walrus::ValType::I64,
                                 expr: Box::new(IncomingBindingExpression::Field(
                                     IncomingBindingExpressionField {
                                         idx: 0,
@@ -164,7 +164,7 @@ mod tests {
                                 ))
                             }),
                             IncomingBindingExpression::As(IncomingBindingExpressionAs {
-                                ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "i64".into() }),
+                                ty: walrus::ValType::I64,
                                 expr: Box::new(IncomingBindingExpression::Field(
                                     IncomingBindingExpressionField {
                                         idx: 1,
@@ -439,7 +439,7 @@ mod tests {
             },
             result: IncomingBindingMap {
                 bindings: vec![IncomingBindingExpression::As(IncomingBindingExpressionAs {
-                    ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "i32".into() }),
+                    ty: walrus::ValType::I32,
                     expr: Box::new(IncomingBindingExpression::Get(IncomingBindingExpressionGet { idx: 0 })),
                 })],
             },
@@ -502,7 +502,7 @@ mod tests {
             webidl_ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "MyWebidlFunc".into() }),
             params: IncomingBindingMap {
                 bindings: vec![IncomingBindingExpression::As(IncomingBindingExpressionAs {
-                    ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "i32".into() }),
+                    ty: walrus::ValType::I32,
                     expr: Box::new(IncomingBindingExpression::Get(IncomingBindingExpressionGet { idx: 0 })),
                 })],
             },
@@ -579,19 +579,41 @@ mod tests {
 
     ok!(
         wasm_type_ref_ok_1,
-        WasmTypeRefParser,
-        "$Contact",
-        WasmTypeRef::Named(WasmTypeRefNamed {
-            name: "$Contact".into(),
-        })
+        WasmValTypeParser,
+        "i32",
+        walrus::ValType::I32
     );
     ok!(
         wasm_type_ref_ok_2,
-        WasmTypeRefParser,
-        "42",
-        WasmTypeRef::Indexed(WasmTypeRefIndexed { idx: 42 })
+        WasmValTypeParser,
+        "i64",
+        walrus::ValType::I64
     );
-    err!(wasm_type_ref_err, WasmTypeRefParser, "1abc");
+    ok!(
+        wasm_type_ref_ok_3,
+        WasmValTypeParser,
+        "f32",
+        walrus::ValType::F32
+    );
+    ok!(
+        wasm_type_ref_ok_4,
+        WasmValTypeParser,
+        "f64",
+        walrus::ValType::F64
+    );
+    ok!(
+        wasm_type_ref_ok_5,
+        WasmValTypeParser,
+        "v128",
+        walrus::ValType::V128
+    );
+    ok!(
+        wasm_type_ref_ok_6,
+        WasmValTypeParser,
+        "anyref",
+        walrus::ValType::Anyref
+    );
+    err!(wasm_type_ref_err, WasmValTypeParser, "a32");
 
     ok!(
         export_binding_ref_ok_1,
@@ -863,7 +885,7 @@ mod tests {
         IncomingBindingExpressionParser,
         "(as i32 (get 0))",
         IncomingBindingExpression::As(IncomingBindingExpressionAs {
-            ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "i32".into() }),
+            ty: walrus::ValType::I32,
             expr: Box::new(IncomingBindingExpression::Get(
                 IncomingBindingExpressionGet { idx: 0 }
             )),
