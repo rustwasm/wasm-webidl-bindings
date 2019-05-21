@@ -133,8 +133,8 @@ References to Web IDL types are encoded as `i32`s and come in two forms:
 
 1. References to compound Web IDL types are `>= 0` and are indices referencing
    the `i`th compound type defined in the Web IDL Type Subsection.
-2. Primitive Web IDL values are encoded as negative numbers, and each primitive
-   type is special cased.
+2. Scalar Web IDL values are encoded as negative numbers, and each scalar
+   type has its own discriminant.
 
 ```
 webidl_type_reference ::= i:i32    (if i >= 0)     => index into Web IDL Type Subsection
