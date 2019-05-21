@@ -45,7 +45,7 @@ impl<W: ?Sized + io::Write> Encode<W> for String {
 impl<W: ?Sized + io::Write> Encode<W> for ast::WebidlBindingsSection {
     fn encode(&self, w: &mut W) -> io::Result<()> {
         self.types.encode(w)?;
-        unimplemented!()
+        self.bindings.encode(w)
     }
 }
 
@@ -147,6 +147,186 @@ impl<W: ?Sized + io::Write> Encode<W> for ast::WebidlUnion {
     }
 }
 
+impl<W: ?Sized + io::Write> Encode<W> for ast::WebidlFunctionBindingsSubsection {
+    fn encode(&self, w: &mut W) -> io::Result<()> {
+        w.byte(1)?;
+        w.vec(&self.bindings)?;
+        w.vec(&self.binds)
+    }
+}
+
+impl<W: ?Sized + io::Write> Encode<W> for ast::FunctionBinding {
+    fn encode(&self, w: &mut W) -> io::Result<()> {
+        match self {
+            ast::FunctionBinding::Import(i) => {
+                w.byte(0)?;
+                i.encode(w)
+            }
+            ast::FunctionBinding::Export(e) => {
+                w.byte(1)?;
+                e.encode(w)
+            }
+        }
+    }
+}
+
+impl<W: ?Sized + io::Write> Encode<W> for ast::ImportBinding {
+    fn encode(&self, w: &mut W) -> io::Result<()> {
+        self.wasm_ty.encode(w)?;
+        self.webidl_ty.encode(w)?;
+        self.params.encode(w)?;
+        self.result.encode(w)
+    }
+}
+
+impl<W: ?Sized + io::Write> Encode<W> for ast::ExportBinding {
+    fn encode(&self, w: &mut W) -> io::Result<()> {
+        self.wasm_ty.encode(w)?;
+        self.webidl_ty.encode(w)?;
+        self.params.encode(w)?;
+        self.result.encode(w)
+    }
+}
+
+impl<W: ?Sized + io::Write> Encode<W> for ast::WasmTypeRef {
+    fn encode(&self, w: &mut W) -> io::Result<()> {
+        match self {
+            ast::WasmTypeRef::Indexed(i) => w.uleb(i.idx as u32),
+            ast::WasmTypeRef::Named(_) => panic!("can only encode canonicalized ASTs"),
+        }
+    }
+}
+
+impl<W: ?Sized + io::Write> Encode<W> for ast::OutgoingBindingMap {
+    fn encode(&self, w: &mut W) -> io::Result<()> {
+        w.vec(&self.bindings)
+    }
+}
+
+impl<W: ?Sized + io::Write> Encode<W> for ast::OutgoingBindingExpression {
+    fn encode(&self, w: &mut W) -> io::Result<()> {
+        match self {
+            ast::OutgoingBindingExpression::As(e) => {
+                w.byte(0)?;
+                e.ty.encode(w)?;
+                w.uleb(e.idx)
+            }
+            ast::OutgoingBindingExpression::Utf8Str(e) => {
+                w.byte(1)?;
+                e.ty.encode(w)?;
+                w.uleb(e.offset)?;
+                w.uleb(e.length)
+            }
+            ast::OutgoingBindingExpression::Utf8CStr(e) => {
+                w.byte(2)?;
+                e.ty.encode(w)?;
+                w.uleb(e.offset)
+            }
+            ast::OutgoingBindingExpression::I32ToEnum(e) => {
+                w.byte(3)?;
+                e.ty.encode(w)?;
+                w.uleb(e.idx)
+            }
+            ast::OutgoingBindingExpression::View(e) => {
+                w.byte(4)?;
+                e.ty.encode(w)?;
+                w.uleb(e.offset)?;
+                w.uleb(e.length)
+            }
+            ast::OutgoingBindingExpression::Copy(e) => {
+                w.byte(5)?;
+                e.ty.encode(w)?;
+                w.uleb(e.offset)?;
+                w.uleb(e.length)
+            }
+            ast::OutgoingBindingExpression::Dict(e) => {
+                w.byte(6)?;
+                e.ty.encode(w)?;
+                w.vec(&e.fields)
+            }
+            ast::OutgoingBindingExpression::BindExport(e) => {
+                w.byte(7)?;
+                e.ty.encode(w)?;
+                e.binding.encode(w)?;
+                w.uleb(e.idx)
+            }
+        }
+    }
+}
+
+impl<W: ?Sized + io::Write> Encode<W> for ast::BindingRef {
+    fn encode(&self, w: &mut W) -> io::Result<()> {
+        match self {
+            ast::BindingRef::Indexed(i) => w.uleb(i.idx),
+            ast::BindingRef::Named(_) => panic!("can only encode canonicalized ASTs"),
+        }
+    }
+}
+
+impl<W: ?Sized + io::Write> Encode<W> for ast::IncomingBindingMap {
+    fn encode(&self, w: &mut W) -> io::Result<()> {
+        w.vec(&self.bindings)
+    }
+}
+
+impl<W: ?Sized + io::Write> Encode<W> for ast::IncomingBindingExpression {
+    fn encode(&self, w: &mut W) -> io::Result<()> {
+        match self {
+            ast::IncomingBindingExpression::Get(e) => {
+                w.byte(0)?;
+                w.uleb(e.idx)
+            }
+            ast::IncomingBindingExpression::As(e) => {
+                w.byte(1)?;
+                e.ty.encode(w)?;
+                e.expr.encode(w)
+            }
+            ast::IncomingBindingExpression::AllocUtf8Str(e) => {
+                w.byte(2)?;
+                e.alloc_func_name.encode(w)?;
+                e.expr.encode(w)
+            }
+            ast::IncomingBindingExpression::AllocCopy(e) => {
+                w.byte(3)?;
+                e.alloc_func_name.encode(w)?;
+                e.expr.encode(w)
+            }
+            ast::IncomingBindingExpression::EnumToI32(e) => {
+                w.byte(4)?;
+                e.ty.encode(w)?;
+                e.expr.encode(w)
+            }
+            ast::IncomingBindingExpression::Field(e) => {
+                w.byte(5)?;
+                w.uleb(e.idx)?;
+                e.expr.encode(w)
+            }
+            ast::IncomingBindingExpression::BindImport(e) => {
+                w.byte(6)?;
+                e.ty.encode(w)?;
+                e.binding.encode(w)?;
+                e.expr.encode(w)
+            }
+        }
+    }
+}
+
+impl<W: ?Sized + io::Write> Encode<W> for ast::Bind {
+    fn encode(&self, w: &mut W) -> io::Result<()> {
+        self.func.encode(w)?;
+        self.binding.encode(w)
+    }
+}
+
+impl<W: ?Sized + io::Write> Encode<W> for ast::WasmFuncRef {
+    fn encode(&self, w: &mut W) -> io::Result<()> {
+        match self {
+            ast::WasmFuncRef::Indexed(i) => w.uleb(i.idx),
+            ast::WasmFuncRef::Named(_) => panic!("can only encode canonicalized ASTs"),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -163,7 +343,7 @@ mod tests {
                 fn $name() {
                     let mut buf = vec![];
                     $ast.encode(&mut buf).expect("writing into a vec can't fail");
-                    assert_eq!(buf, &$expected);
+                    assert_eq!(buf, &$expected[..]);
                 }
             )*
         }
@@ -177,6 +357,185 @@ mod tests {
         WebidlTypeRef::Indexed(WebidlTypeRefIndexed { idx: 9001 });
 
     assert_encoding! {
+        webidl_bindings_sec(
+            WebidlBindingsSection {
+                types: WebidlTypeSubsection {
+                    types: vec![
+                        WebidlType {
+                            name: Some("$TextEncoderEncodeIntoResult".into()),
+                            ty: WebidlCompoundType::Dictionary(WebidlDictionary {
+                                fields: vec![
+                                    WebidlDictionaryField {
+                                        name: "read".into(),
+                                        ty: WebidlTypeRef::Indexed(WebidlTypeRefIndexed {
+                                            idx: 0,
+                                        }),
+                                    },
+                                    WebidlDictionaryField {
+                                        name: "written".into(),
+                                        ty: WebidlTypeRef::Indexed(WebidlTypeRefIndexed {
+                                            idx: 1,
+                                        }),
+                                    },
+                                ],
+                            }),
+                        },
+                        WebidlType {
+                            name: Some("$EncodeIntoFuncWebIDL".into()),
+                            ty: WebidlCompoundType::Function(WebidlFunction {
+                                kind: WebidlFunctionKind::Method(WebidlFunctionKindMethod {
+                                    ty: WebidlTypeRef::Indexed(WebidlTypeRefIndexed {
+                                        idx: 2,
+                                    }),
+                                }),
+                                params: vec![
+                                    WebidlTypeRef::Indexed(WebidlTypeRefIndexed {
+                                        idx: 3,
+                                    }),
+                                    WebidlTypeRef::Indexed(WebidlTypeRefIndexed {
+                                        idx: 4,
+                                    }),
+                                ],
+                                result: Some(WebidlTypeRef::Indexed(WebidlTypeRefIndexed {
+                                    idx: 5,
+                                })),
+                            })
+                        },
+                    ]
+                },
+                bindings: WebidlFunctionBindingsSubsection {
+                    bindings: vec![FunctionBinding::Import(ImportBinding {
+                        name: Some("$encodeIntoBinding".into()),
+                        wasm_ty: WasmTypeRef::Indexed(WasmTypeRefIndexed {
+                            idx: 6,
+                        }),
+                        webidl_ty: WebidlTypeRef::Indexed(WebidlTypeRefIndexed {
+                            idx: 7,
+                        }),
+                        params: OutgoingBindingMap {
+                            bindings: vec![
+                                OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
+                                    ty: WebidlTypeRef::Indexed(WebidlTypeRefIndexed {
+                                        idx: 8,
+                                    }),
+                                    idx: 0
+                                }),
+                                OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
+                                    ty: WebidlTypeRef::Indexed(WebidlTypeRefIndexed {
+                                        idx: 9,
+                                    }),
+                                    idx: 1
+                                }),
+                                OutgoingBindingExpression::View(OutgoingBindingExpressionView {
+                                    ty: WebidlTypeRef::Indexed(WebidlTypeRefIndexed {
+                                        idx: 10,
+                                    }),
+                                    offset: 2,
+                                    length: 3
+                                })
+                            ]
+                        },
+                        result: IncomingBindingMap {
+                            bindings: vec![
+                                IncomingBindingExpression::As(IncomingBindingExpressionAs {
+                                    ty: WasmTypeRef::Indexed(WasmTypeRefIndexed {
+                                        idx: 11,
+                                    }),
+                                    expr: Box::new(IncomingBindingExpression::Field(
+                                        IncomingBindingExpressionField {
+                                            idx: 0,
+                                            expr: Box::new(IncomingBindingExpression::Get(
+                                                IncomingBindingExpressionGet { idx: 0 }
+                                            ))
+                                        }
+                                    ))
+                                }),
+                                IncomingBindingExpression::As(IncomingBindingExpressionAs {
+                                    ty: WasmTypeRef::Indexed(WasmTypeRefIndexed {
+                                        idx: 12,
+                                    }),
+                                    expr: Box::new(IncomingBindingExpression::Field(
+                                        IncomingBindingExpressionField {
+                                            idx: 1,
+                                            expr: Box::new(IncomingBindingExpression::Get(
+                                                IncomingBindingExpressionGet { idx: 0 }
+                                            )),
+                                        }
+                                    ))
+                                })
+                            ]
+                        }
+                    })],
+                    binds: vec![Bind {
+                        func: WasmFuncRef::Indexed(WasmFuncRefIndexed {
+                            idx: 13,
+                        }),
+                        binding: BindingRef::Indexed(BindingRefIndexed {
+                            idx: 14,
+                        })
+                    }]
+                },
+            },
+            vec![
+                // types subsection
+                0,
+                // number of types
+                2,
+                // dictionary type
+                1,
+                // number of fields
+                2,
+                // "read"
+                4, 114, 101, 97, 100,
+                0,
+                // "written"
+                7, 119, 114, 105, 116, 116, 101, 110,
+                1,
+                // function type
+                0,
+                // method
+                1, 2,
+                // params
+                2, 3, 4,
+                // result
+                1, 5,
+                // bindings subsection
+                1,
+                // number of bindings
+                1,
+                // import
+                0,
+                6,
+                7,
+                // params
+                3,
+                // as
+                0, 8, 0,
+                // as
+                0, 9, 1,
+                // view
+                4, 10, 2, 3,
+                // results
+                2,
+                // as
+                1, 11,
+                // field
+                5, 0,
+                // get
+                0, 0,
+                // as
+                1, 12,
+                // field
+                5, 1,
+                // get
+                0, 0,
+                // number of binds
+                1,
+                // bind
+                13, 14,
+            ],
+        );
+
         webidl_type_function(
             WebidlType {
                 name: None,
@@ -394,6 +753,366 @@ mod tests {
                 // WEBIDL_TYPE_REF_B
                 169, 198, 0,
             ],
+        );
+
+        bindings_subsec(
+            WebidlFunctionBindingsSubsection {
+                bindings: vec![],
+                binds: vec![],
+            },
+            [
+                // function bindings subsection
+                1,
+                // 0 bindings
+                0,
+                // 0 binds
+                0,
+            ],
+        );
+
+        function_binding_export(
+            FunctionBinding::Export(ExportBinding {
+                name: None,
+                wasm_ty: WasmTypeRef::Indexed(WasmTypeRefIndexed { idx: 0 }),
+                webidl_ty: WEBIDL_TYPE_REF_A,
+                params: IncomingBindingMap { bindings: vec![] },
+                result: OutgoingBindingMap { bindings: vec![] },
+            }),
+            [
+                // export binding
+                1,
+                // wasm_ty
+                0,
+                // WEBIDL_TYPE_REF_A
+                185, 10,
+                // 0 params
+                0,
+                // 0 results
+                0,
+            ],
+        );
+
+        function_binding_import(
+            FunctionBinding::Import(ImportBinding {
+                name: None,
+                wasm_ty: WasmTypeRef::Indexed(WasmTypeRefIndexed { idx: 0 }),
+                webidl_ty: WEBIDL_TYPE_REF_A,
+                params: OutgoingBindingMap { bindings: vec![] },
+                result: IncomingBindingMap { bindings: vec![] },
+            }),
+            [
+                // import binding
+                0,
+                // wasm_ty
+                0,
+                // WEBIDL_TYPE_REF_A
+                185, 10,
+                // 0 params
+                0,
+                // 0 results
+                0,
+            ],
+        );
+
+        outgoing_binding_map(
+            OutgoingBindingMap {
+                bindings: vec![
+                    OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
+                        ty: WEBIDL_TYPE_REF_A,
+                        idx: 1,
+                    }),
+                    OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
+                        ty: WEBIDL_TYPE_REF_B,
+                        idx: 2,
+                    }),
+                ]
+            },
+            [
+                // Number of expresssions
+                2,
+                // as
+                0,
+                // WEBIDL_TYPE_REF_A
+                185, 10,
+                // idx
+                1,
+                // as
+                0,
+                // WEBIDL_TYPE_REF_B
+                169, 198, 0,
+                // idx
+                2,
+            ],
+        );
+
+        outgoing_binding_expression_as(
+            OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
+                ty: WEBIDL_TYPE_REF_A,
+                idx: 2,
+            }),
+            [
+                // as
+                0,
+                // WEBIDL_TYPE_REF_A
+                185, 10,
+                // idx
+                2,
+            ],
+        );
+        outgoing_binding_expression_utf8_str(
+            OutgoingBindingExpression::Utf8Str(OutgoingBindingExpressionUtf8Str {
+                ty: WEBIDL_TYPE_REF_A,
+                offset: 22,
+                length: 33,
+            }),
+            [
+                // utf8-str
+                1,
+                // WEBIDL_TYPE_REF_A
+                185, 10,
+                // offset
+                22,
+                // length
+                33,
+            ],
+        );
+        outgoing_binding_expression_utf8_cstr(
+            OutgoingBindingExpression::Utf8CStr(OutgoingBindingExpressionUtf8CStr {
+                ty: WEBIDL_TYPE_REF_A,
+                offset: 22,
+            }),
+            [
+                // utf8-cstr
+                2,
+                // WEBIDL_TYPE_REF_A
+                185, 10,
+                // offset
+                22,
+            ],
+        );
+        outgoing_binding_expression_i32_to_enum(
+            OutgoingBindingExpression::I32ToEnum(OutgoingBindingExpressionI32ToEnum {
+                ty: WEBIDL_TYPE_REF_A,
+                idx: 4,
+            }),
+            [
+                // i32-to-enum
+                3,
+                // WEBIDL_TYPE_REF_A
+                185, 10,
+                // idx
+                4,
+            ],
+        );
+        outgoing_binding_expression_view(
+            OutgoingBindingExpression::View(OutgoingBindingExpressionView {
+                ty: WEBIDL_TYPE_REF_A,
+                offset: 1,
+                length: 2,
+            }),
+            [
+                // view
+                4,
+                // WEBIDL_TYPE_REF_A
+                185, 10,
+                // offset
+                1,
+                // length
+                2,
+            ],
+        );
+        outgoing_binding_expression_copy(
+            OutgoingBindingExpression::Copy(OutgoingBindingExpressionCopy {
+                ty: WEBIDL_TYPE_REF_A,
+                offset: 1,
+                length: 2,
+            }),
+            [
+                // copy
+                5,
+                // WEBIDL_TYPE_REF_A
+                185, 10,
+                // offset
+                1,
+                // length
+                2,
+            ],
+        );
+        outgoing_binding_expression_dict(
+            OutgoingBindingExpression::Dict(OutgoingBindingExpressionDict {
+                ty: WEBIDL_TYPE_REF_A,
+                fields: vec![
+                    OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
+                        ty: WEBIDL_TYPE_REF_B,
+                        idx: 2,
+                    }),
+                ],
+            }),
+            [
+                // dict
+                6,
+                // WEBIDL_TYPE_REF_A
+                185, 10,
+                // Number of fields
+                1,
+                // as
+                0,
+                // WEBIDL_TYPE_REF_B
+                169, 198, 0,
+                // idx
+                2
+            ],
+        );
+        outgoing_binding_expression_bind_export(
+            OutgoingBindingExpression::BindExport(OutgoingBindingExpressionBindExport {
+                ty: WebidlTypeRef::Indexed(WebidlTypeRefIndexed { idx: 6 }),
+                binding: BindingRef::Indexed(BindingRefIndexed { idx: 1 }),
+                idx: 3,
+            }),
+            [
+                // bind-export
+                7,
+                6,
+                1,
+                3,
+            ],
+        );
+
+        incoming_binding_map(
+            IncomingBindingMap {
+                bindings: vec![
+                    IncomingBindingExpression::Get(IncomingBindingExpressionGet { idx: 1 }),
+                    IncomingBindingExpression::Get(IncomingBindingExpressionGet { idx: 2 }),
+                    IncomingBindingExpression::Get(IncomingBindingExpressionGet { idx: 3 }),
+                ],
+            },
+            [
+                // Number of expressions
+                3,
+                // get
+                0, 1,
+                // get
+                0, 2,
+                // get
+                0, 3
+            ],
+        );
+
+        incoming_binding_expression_get(
+            IncomingBindingExpression::Get(IncomingBindingExpressionGet { idx: 1 }),
+            [
+                // get
+                0,
+                1,
+            ]
+        );
+        incoming_binding_expression_as(
+            IncomingBindingExpression::As(IncomingBindingExpressionAs {
+                ty: WasmTypeRef::Indexed(WasmTypeRefIndexed { idx: 1 }),
+                expr: Box::new(IncomingBindingExpression::Get(IncomingBindingExpressionGet {
+                    idx: 2,
+                })),
+            }),
+            [
+                // as
+                1,
+                1,
+                // get
+                0,
+                2,
+            ],
+        );
+        incoming_binding_expression_alloc_utf8_str(
+            IncomingBindingExpression::AllocUtf8Str(IncomingBindingExpressionAllocUtf8Str {
+                alloc_func_name: "malloc".into(),
+                expr: Box::new(IncomingBindingExpression::Get(IncomingBindingExpressionGet {
+                    idx: 1,
+                })),
+            }),
+            [
+                // alloc-utf8-str
+                2,
+                // "malloc"
+                6, 109, 97, 108, 108, 111, 99,
+                // get
+                0,
+                1
+            ],
+        );
+        incoming_binding_expression_alloc_copy(
+            IncomingBindingExpression::AllocCopy(IncomingBindingExpressionAllocCopy {
+                alloc_func_name: "malloc".into(),
+                expr: Box::new(IncomingBindingExpression::Get(IncomingBindingExpressionGet {
+                    idx: 1,
+                })),
+            }),
+            [
+                // alloc-copy
+                3,
+                // "malloc"
+                6, 109, 97, 108, 108, 111, 99,
+                // get
+                0,
+                1
+            ],
+        );
+        incoming_binding_expression_enum_to_i32(
+            IncomingBindingExpression::EnumToI32(IncomingBindingExpressionEnumToI32 {
+                ty: WebidlTypeRef::Indexed(WebidlTypeRefIndexed { idx: 1 }),
+                expr: Box::new(IncomingBindingExpression::Get(IncomingBindingExpressionGet {
+                    idx: 2,
+                })),
+            }),
+            [
+                // enum-to-i32
+                4,
+                1,
+                // get
+                0,
+                2,
+            ],
+        );
+        incoming_binding_expression_field(
+            IncomingBindingExpression::Field(IncomingBindingExpressionField {
+                idx: 1,
+                expr: Box::new(IncomingBindingExpression::Get(IncomingBindingExpressionGet {
+                    idx: 2,
+                })),
+            }),
+            [
+                // field
+                5,
+                1,
+                // get
+                0,
+                2,
+            ],
+        );
+        incoming_binding_expression_bind_import(
+            IncomingBindingExpression::BindImport(IncomingBindingExpressionBindImport {
+                ty: WasmTypeRef::Indexed(WasmTypeRefIndexed { idx: 1 }),
+                binding: BindingRef::Indexed(BindingRefIndexed { idx: 2 }),
+                expr: Box::new(IncomingBindingExpression::Get(IncomingBindingExpressionGet {
+                    idx: 3,
+                })),
+            }),
+            [
+                // bind-import
+                6,
+                1,
+                2,
+                // get
+                0,
+                3
+            ],
+        );
+
+        bind(
+            Bind {
+                func: WasmFuncRef::Indexed(WasmFuncRefIndexed { idx: 1 }),
+                binding: BindingRef::Indexed(BindingRefIndexed { idx: 2 }),
+            },
+            [1, 2],
         );
 
         webidl_type_ref(WEBIDL_TYPE_REF_A, [185, 10]);

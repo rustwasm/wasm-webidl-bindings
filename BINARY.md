@@ -142,4 +142,82 @@ webidl_type_reference ::= i:i32    (if i >= 0)     => index into Web IDL Type Su
 
 ## The Function Binding Subsection
 
-TODO
+The Web IDL Function Binding Subsection is a sequence of `function_binding`s and
+`bind`s:
+
+```
+bindings_subsec ::= webidl_bindings_subsection[1]( vec(function_binding) vec(bind) )
+```
+
+### Function Bindings
+
+Function bindings come in two flavors:
+
+1. Import bindings connect imported external Web IDL function to Wasm functions.
+2. Export bindings connect exported Wasm functions to external Web IDL callers.
+
+```
+function_binding ::= 0x0 import_binding
+                 ::= 0x1 export_binding
+
+import_binding ::= typeidx                  # Wasm function type
+                   webidl_type_reference    # Web IDL function type
+                   outgoing_binding_map     # Parameters
+                   incoming_binding_map     # Result
+
+export_binding ::= typeidx                  # Wasm function type
+                   webidl_type_reference    # Web IDL function type
+                   incoming_binding_map     # Parameters
+                   outgoing_binding_map     # Result
+```
+
+### Outgoing Bindings
+
+An `outgoing_binding_map` is a sequence of `outgoing_binding_expression`s, and
+each expression kind is assigned its own discriminant:
+
+```
+outgoing_binding_map ::= vec(outgoing_binding_expression)
+
+outgoing_binding_expression ::= 0x0 webidl_type_reference u32     # as
+                            ::= 0x1 webidl_type_reference u32 u32 # utf8-str
+                            ::= 0x2 webidl_type_reference u32     # utf8-cstr
+                            ::= 0x3 webidl_type_reference u32     # i32-to-enum
+                            ::= 0x4 webidl_type_reference u32 u32 # view
+                            ::= 0x5 webidl_type_reference u32 u32 # copy
+                            ::= 0x6                               # dict
+                                webidl_type_reference
+                                vec(outgoing_binding_expression)
+                            ::= 0x7 webidl_type_reference u32 u32 # bind-export
+```
+
+### Incoming Bindings
+
+An `incoming_binding_map` is a sequence of nested `incoming_binding_expression`
+trees, and each expression kind is assigned its own discriminant:
+
+```
+incoming_binding_map ::= vec(incoming_binding_expression)
+
+incoming_binding_expression ::= 0x0 u32                                 # get
+                            ::= 0x1 valtype incoming_binding_expression # as
+                            ::= 0x2 name incoming_binding_expression    # alloc-utf8-str
+                            ::= 0x3 name incoming_binding_expression    # alloc-copy
+                            ::= 0x4                                     # enum-to-i32
+                                webidl_type_reference
+                                incoming_binding_expression
+                            ::= 0x5 u32 incoming_binding_expression     # field
+                            ::= 0x6                                     # bind-import
+                                typeidx
+                                u32
+                                incoming_binding_expression
+```
+
+### Binds
+
+A `bind` pairs the index of a Wasm function with the index of a
+`function_binding`:
+
+```
+bind ::= funcidx u32
+```
