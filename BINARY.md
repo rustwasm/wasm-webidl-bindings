@@ -16,6 +16,10 @@ currently supports.
   - [Web IDL Unions](#web-idl-unions)
 - [References to Web IDL Types](#references-to-web-idl-types)
 - [The Function Binding Subsection](#the-function-binding-subsection)
+  - [Function Bindings](#function-bindings)
+  - [Outgoing Bindings](#outgoing-bindings)
+  - [Incoming Bindings](#incoming-bindings)
+  - [Binds](#binds)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
