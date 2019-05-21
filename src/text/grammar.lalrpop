@@ -92,7 +92,7 @@ pub(crate) ImportBinding: A::ImportBinding =
     "func-binding"
     <name:Identifier?>
     "import"
-    <wasm_ty:WasmTypeRef>
+    <wasm_ty:WasmFuncTypeRef>
     <webidl_ty:WebidlTypeRef>
     "(" "param" <params:OutgoingBindingMap> ")"
     "(" "result" <result:IncomingBindingMap> ")" =>
@@ -102,7 +102,7 @@ pub(crate) ExportBinding: A::ExportBinding =
     "func-binding"
     <name:Identifier?>
     "export"
-    <wasm_ty:WasmTypeRef>
+    <wasm_ty:WasmFuncTypeRef>
     <webidl_ty:WebidlTypeRef>
     "(" "param" <params:IncomingBindingMap> ")"
     "(" "result" <result:OutgoingBindingMap> ")" =>
@@ -145,6 +145,19 @@ WasmTypeRefNamed: A::WasmTypeRefNamed =
 WasmTypeRefIndexed: A::WasmTypeRefIndexed =
     <idx: Unsigned> =>
         actions.wasm_type_ref_indexed(idx);
+
+pub(crate) WasmFuncTypeRef: A::WasmFuncTypeRef = {
+    <a:WasmFuncTypeRefNamed> => a.into(),
+    <a:WasmFuncTypeRefIndexed> => a.into(),
+};
+
+WasmFuncTypeRefNamed: A::WasmFuncTypeRefNamed =
+    <s:Identifier> =>
+        actions.wasm_func_type_ref_named(s);
+
+WasmFuncTypeRefIndexed: A::WasmFuncTypeRefIndexed =
+    <idx: Unsigned> =>
+        actions.wasm_func_type_ref_indexed(idx);
 
 pub(crate) WasmFuncRef: A::WasmFuncRef = {
     <a:WasmFuncRefNamed> => a.into(),
@@ -212,7 +225,12 @@ OutgoingBindingExpressionDict: A::OutgoingBindingExpressionDict =
         actions.outgoing_binding_expression_dict(ty, fields);
 
 OutgoingBindingExpressionBindExport: A::OutgoingBindingExpressionBindExport =
-    "(" "bind-export" <ty:WebidlTypeRef> <binding:BindingRef> <idx:Unsigned> ")" =>
+    "("
+        "bind-export"
+        <ty:WebidlTypeRef>
+        <binding:BindingRef>
+        <idx:Unsigned>
+    ")" =>
         actions.outgoing_binding_expression_bind_export(ty, binding, idx);
 
 pub(crate) IncomingBindingExpression: A::IncomingBindingExpression = {
@@ -258,7 +276,12 @@ IncomingBindingExpressionField: A::IncomingBindingExpressionField =
         actions.incoming_binding_expression_field(idx, expr);
 
 IncomingBindingExpressionBindImport: A::IncomingBindingExpressionBindImport =
-    "(" "bind-import" <ty:WasmTypeRef> <binding:BindingRef> <expr:IncomingBindingExpression> ")" =>
+    "("
+        "bind-import"
+        <ty:WasmFuncTypeRef>
+        <binding:BindingRef>
+        <expr:IncomingBindingExpression>
+    ")" =>
         actions.incoming_binding_expression_bind_import(ty, binding, expr);
 
 Unsigned: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();

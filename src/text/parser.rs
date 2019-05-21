@@ -125,7 +125,7 @@ mod tests {
             bindings: WebidlFunctionBindingsSubsection {
                 bindings: vec![FunctionBinding::Import(ImportBinding {
                     name: Some("$encodeIntoBinding".into()),
-                    wasm_ty: WasmTypeRef::Named(WasmTypeRefNamed {
+                    wasm_ty: WasmFuncTypeRef::Named(WasmFuncTypeRefNamed {
                         name: "$EncodeIntoFuncWasm".into(),
                     }),
                     webidl_ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
@@ -429,7 +429,7 @@ mod tests {
         "func-binding Yoyo import MyWasmFunc MyWebidlFunc (param (as any 0)) (result (as i32 (get 0)))",
         ImportBinding {
             name: Some("Yoyo".into()),
-            wasm_ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "MyWasmFunc".into() }),
+            wasm_ty: WasmFuncTypeRef::Named(WasmFuncTypeRefNamed { name: "MyWasmFunc".into() }),
             webidl_ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "MyWebidlFunc".into() }),
             params: OutgoingBindingMap {
                 bindings: vec![OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
@@ -451,7 +451,7 @@ mod tests {
         "func-binding import MyWasmFunc MyWebidlFunc (param) (result)",
         ImportBinding {
             name: None,
-            wasm_ty: WasmTypeRef::Named(WasmTypeRefNamed {
+            wasm_ty: WasmFuncTypeRef::Named(WasmFuncTypeRefNamed {
                 name: "MyWasmFunc".into()
             }),
             webidl_ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
@@ -498,7 +498,7 @@ mod tests {
         "func-binding Yoyo export MyWasmFunc MyWebidlFunc (param (as i32 (get 0))) (result (as any 0))",
         ExportBinding {
             name: Some("Yoyo".into()),
-            wasm_ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "MyWasmFunc".into() }),
+            wasm_ty: WasmFuncTypeRef::Named(WasmFuncTypeRefNamed { name: "MyWasmFunc".into() }),
             webidl_ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "MyWebidlFunc".into() }),
             params: IncomingBindingMap {
                 bindings: vec![IncomingBindingExpression::As(IncomingBindingExpressionAs {
@@ -520,7 +520,7 @@ mod tests {
         "func-binding export MyWasmFunc MyWebidlFunc (param) (result)",
         ExportBinding {
             name: None,
-            wasm_ty: WasmTypeRef::Named(WasmTypeRefNamed {
+            wasm_ty: WasmFuncTypeRef::Named(WasmFuncTypeRefNamed {
                 name: "MyWasmFunc".into()
             }),
             webidl_ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
@@ -975,7 +975,7 @@ mod tests {
         IncomingBindingExpressionParser,
         "(bind-import hi hello (get 1))",
         IncomingBindingExpression::BindImport(IncomingBindingExpressionBindImport {
-            ty: WasmTypeRef::Named(WasmTypeRefNamed { name: "hi".into() }),
+            ty: WasmFuncTypeRef::Named(WasmFuncTypeRefNamed { name: "hi".into() }),
             binding: BindingRef::Named(BindingRefNamed {
                 name: "hello".into()
             }),

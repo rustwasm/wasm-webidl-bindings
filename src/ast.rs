@@ -111,7 +111,7 @@ impl Actions for BuildAstActions {
     fn import_binding(
         &mut self,
         name: Option<&str>,
-        wasm_ty: WasmTypeRef,
+        wasm_ty: WasmFuncTypeRef,
         webidl_ty: WebidlTypeRef,
         params: OutgoingBindingMap,
         result: IncomingBindingMap,
@@ -130,7 +130,7 @@ impl Actions for BuildAstActions {
     fn export_binding(
         &mut self,
         name: Option<&str>,
-        wasm_ty: WasmTypeRef,
+        wasm_ty: WasmFuncTypeRef,
         webidl_ty: WebidlTypeRef,
         params: IncomingBindingMap,
         result: OutgoingBindingMap,
@@ -312,7 +312,7 @@ impl Actions for BuildAstActions {
     type IncomingBindingExpressionBindImport = IncomingBindingExpressionBindImport;
     fn incoming_binding_expression_bind_import(
         &mut self,
-        ty: WasmTypeRef,
+        ty: WasmFuncTypeRef,
         binding: BindingRef,
         expr: IncomingBindingExpression,
     ) -> IncomingBindingExpressionBindImport {
@@ -344,6 +344,19 @@ impl Actions for BuildAstActions {
     type WasmTypeRefIndexed = WasmTypeRefIndexed;
     fn wasm_type_ref_indexed(&mut self, idx: u32) -> WasmTypeRefIndexed {
         WasmTypeRefIndexed { idx }
+    }
+
+    type WasmFuncTypeRef = WasmFuncTypeRef;
+
+    type WasmFuncTypeRefNamed = WasmFuncTypeRefNamed;
+    fn wasm_func_type_ref_named(&mut self, name: &str) -> WasmFuncTypeRefNamed {
+        let name = name.to_string();
+        WasmFuncTypeRefNamed { name }
+    }
+
+    type WasmFuncTypeRefIndexed = WasmFuncTypeRefIndexed;
+    fn wasm_func_type_ref_indexed(&mut self, idx: u32) -> WasmFuncTypeRefIndexed {
+        WasmFuncTypeRefIndexed { idx }
     }
 
     type WasmFuncRef = WasmFuncRef;
@@ -501,7 +514,7 @@ impl From<ExportBinding> for FunctionBinding {
 #[derive(Debug, PartialEq, Eq)]
 pub struct ImportBinding {
     pub name: Option<String>,
-    pub wasm_ty: WasmTypeRef,
+    pub wasm_ty: WasmFuncTypeRef,
     pub webidl_ty: WebidlTypeRef,
     pub params: OutgoingBindingMap,
     pub result: IncomingBindingMap,
@@ -510,7 +523,7 @@ pub struct ImportBinding {
 #[derive(Debug, PartialEq, Eq)]
 pub struct ExportBinding {
     pub name: Option<String>,
-    pub wasm_ty: WasmTypeRef,
+    pub wasm_ty: WasmFuncTypeRef,
     pub webidl_ty: WebidlTypeRef,
     pub params: IncomingBindingMap,
     pub result: OutgoingBindingMap,
@@ -734,7 +747,7 @@ pub struct IncomingBindingExpressionField {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionBindImport {
-    pub ty: WasmTypeRef,
+    pub ty: WasmFuncTypeRef,
     pub binding: BindingRef,
     pub expr: Box<IncomingBindingExpression>,
 }
@@ -792,6 +805,34 @@ pub struct WasmTypeRefNamed {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct WasmTypeRefIndexed {
+    pub idx: u32,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum WasmFuncTypeRef {
+    Named(WasmFuncTypeRefNamed),
+    Indexed(WasmFuncTypeRefIndexed),
+}
+
+impl From<WasmFuncTypeRefNamed> for WasmFuncTypeRef {
+    fn from(n: WasmFuncTypeRefNamed) -> Self {
+        WasmFuncTypeRef::Named(n)
+    }
+}
+
+impl From<WasmFuncTypeRefIndexed> for WasmFuncTypeRef {
+    fn from(i: WasmFuncTypeRefIndexed) -> Self {
+        WasmFuncTypeRef::Indexed(i)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WasmFuncTypeRefNamed {
+    pub name: String,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WasmFuncTypeRefIndexed {
     pub idx: u32,
 }
 

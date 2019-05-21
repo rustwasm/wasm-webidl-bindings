@@ -89,7 +89,7 @@ pub trait Actions {
     fn import_binding(
         &mut self,
         name: Option<&str>,
-        wasm_ty: Self::WasmTypeRef,
+        wasm_ty: Self::WasmFuncTypeRef,
         webidl_ty: Self::WebidlTypeRef,
         params: Self::OutgoingBindingMap,
         result: Self::IncomingBindingMap,
@@ -99,7 +99,7 @@ pub trait Actions {
     fn export_binding(
         &mut self,
         name: Option<&str>,
-        wasm_ty: Self::WasmTypeRef,
+        wasm_ty: Self::WasmFuncTypeRef,
         webidl_ty: Self::WebidlTypeRef,
         params: Self::IncomingBindingMap,
         result: Self::OutgoingBindingMap,
@@ -238,7 +238,7 @@ pub trait Actions {
     type IncomingBindingExpressionBindImport;
     fn incoming_binding_expression_bind_import(
         &mut self,
-        ty: Self::WasmTypeRef,
+        ty: Self::WasmFuncTypeRef,
         binding: Self::BindingRef,
         expr: Self::IncomingBindingExpression,
     ) -> Self::IncomingBindingExpressionBindImport;
@@ -258,6 +258,14 @@ pub trait Actions {
 
     type WasmTypeRefIndexed;
     fn wasm_type_ref_indexed(&mut self, idx: u32) -> Self::WasmTypeRefIndexed;
+
+    type WasmFuncTypeRef: From<Self::WasmFuncTypeRefNamed> + From<Self::WasmFuncTypeRefIndexed>;
+
+    type WasmFuncTypeRefNamed;
+    fn wasm_func_type_ref_named(&mut self, name: &str) -> Self::WasmFuncTypeRefNamed;
+
+    type WasmFuncTypeRefIndexed;
+    fn wasm_func_type_ref_indexed(&mut self, idx: u32) -> Self::WasmFuncTypeRefIndexed;
 
     type WasmFuncRef: From<Self::WasmFuncRefNamed> + From<Self::WasmFuncRefIndexed>;
 

@@ -197,6 +197,15 @@ impl<W: ?Sized + io::Write> Encode<W> for ast::WasmTypeRef {
     }
 }
 
+impl<W: ?Sized + io::Write> Encode<W> for ast::WasmFuncTypeRef {
+    fn encode(&self, w: &mut W) -> io::Result<()> {
+        match self {
+            ast::WasmFuncTypeRef::Indexed(i) => w.uleb(i.idx as u32),
+            ast::WasmFuncTypeRef::Named(_) => panic!("can only encode canonicalized ASTs"),
+        }
+    }
+}
+
 impl<W: ?Sized + io::Write> Encode<W> for ast::OutgoingBindingMap {
     fn encode(&self, w: &mut W) -> io::Result<()> {
         w.vec(&self.bindings)
@@ -406,7 +415,7 @@ mod tests {
                 bindings: WebidlFunctionBindingsSubsection {
                     bindings: vec![FunctionBinding::Import(ImportBinding {
                         name: Some("$encodeIntoBinding".into()),
-                        wasm_ty: WasmTypeRef::Indexed(WasmTypeRefIndexed {
+                        wasm_ty: WasmFuncTypeRef::Indexed(WasmFuncTypeRefIndexed {
                             idx: 6,
                         }),
                         webidl_ty: WebidlTypeRef::Indexed(WebidlTypeRefIndexed {
@@ -773,7 +782,7 @@ mod tests {
         function_binding_export(
             FunctionBinding::Export(ExportBinding {
                 name: None,
-                wasm_ty: WasmTypeRef::Indexed(WasmTypeRefIndexed { idx: 0 }),
+                wasm_ty: WasmFuncTypeRef::Indexed(WasmFuncTypeRefIndexed { idx: 0 }),
                 webidl_ty: WEBIDL_TYPE_REF_A,
                 params: IncomingBindingMap { bindings: vec![] },
                 result: OutgoingBindingMap { bindings: vec![] },
@@ -795,7 +804,7 @@ mod tests {
         function_binding_import(
             FunctionBinding::Import(ImportBinding {
                 name: None,
-                wasm_ty: WasmTypeRef::Indexed(WasmTypeRefIndexed { idx: 0 }),
+                wasm_ty: WasmFuncTypeRef::Indexed(WasmFuncTypeRefIndexed { idx: 0 }),
                 webidl_ty: WEBIDL_TYPE_REF_A,
                 params: OutgoingBindingMap { bindings: vec![] },
                 result: IncomingBindingMap { bindings: vec![] },
@@ -1090,7 +1099,7 @@ mod tests {
         );
         incoming_binding_expression_bind_import(
             IncomingBindingExpression::BindImport(IncomingBindingExpressionBindImport {
-                ty: WasmTypeRef::Indexed(WasmTypeRefIndexed { idx: 1 }),
+                ty: WasmFuncTypeRef::Indexed(WasmFuncTypeRefIndexed { idx: 1 }),
                 binding: BindingRef::Indexed(BindingRefIndexed { idx: 2 }),
                 expr: Box::new(IncomingBindingExpression::Get(IncomingBindingExpressionGet {
                     idx: 3,
