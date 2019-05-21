@@ -115,9 +115,45 @@ impl<W: ?Sized + io::Write> Encode<W> for ast::WebidlTypeRef {
     fn encode(&self, w: &mut W) -> io::Result<()> {
         match self {
             ast::WebidlTypeRef::Indexed(i) => w.ileb(i.idx as i32),
-            // TODO: primitive types:
-            // https://github.com/rustwasm/wasm-webidl-bindings/issues/8
+            ast::WebidlTypeRef::Scalar(s) => s.encode(w),
             ast::WebidlTypeRef::Named(_) => panic!("can only encode canonicalized ASTs"),
+        }
+    }
+}
+
+impl<W: ?Sized + io::Write> Encode<W> for ast::WebidlScalarType {
+    fn encode(&self, w: &mut W) -> io::Result<()> {
+        match self {
+            ast::WebidlScalarType::Any => w.ileb(-1),
+            ast::WebidlScalarType::Boolean => w.ileb(-2),
+            ast::WebidlScalarType::Byte => w.ileb(-3),
+            ast::WebidlScalarType::Octet => w.ileb(-4),
+            ast::WebidlScalarType::Long => w.ileb(-5),
+            ast::WebidlScalarType::UnsignedLong => w.ileb(-6),
+            ast::WebidlScalarType::Short => w.ileb(-7),
+            ast::WebidlScalarType::UnsignedShort => w.ileb(-8),
+            ast::WebidlScalarType::LongLong => w.ileb(-9),
+            ast::WebidlScalarType::UnsignedLongLong => w.ileb(-10),
+            ast::WebidlScalarType::Float => w.ileb(-11),
+            ast::WebidlScalarType::UnrestrictedFloat => w.ileb(-12),
+            ast::WebidlScalarType::Double => w.ileb(-13),
+            ast::WebidlScalarType::UnrestrictedDouble => w.ileb(-14),
+            ast::WebidlScalarType::DomString => w.ileb(-15),
+            ast::WebidlScalarType::ByteString => w.ileb(-16),
+            ast::WebidlScalarType::UsvString => w.ileb(-17),
+            ast::WebidlScalarType::Object => w.ileb(-18),
+            ast::WebidlScalarType::Symbol => w.ileb(-19),
+            ast::WebidlScalarType::ArrayBuffer => w.ileb(-20),
+            ast::WebidlScalarType::DataView => w.ileb(-21),
+            ast::WebidlScalarType::Int8Array => w.ileb(-22),
+            ast::WebidlScalarType::Int16Array => w.ileb(-23),
+            ast::WebidlScalarType::Int32Array => w.ileb(-24),
+            ast::WebidlScalarType::Uint8Array => w.ileb(-25),
+            ast::WebidlScalarType::Uint16Array => w.ileb(-26),
+            ast::WebidlScalarType::Uint32Array => w.ileb(-27),
+            ast::WebidlScalarType::Uint8ClampedArray => w.ileb(-28),
+            ast::WebidlScalarType::Float32Array => w.ileb(-29),
+            ast::WebidlScalarType::Float64Array => w.ileb(-30),
         }
     }
 }

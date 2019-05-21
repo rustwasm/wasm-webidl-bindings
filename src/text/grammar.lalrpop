@@ -123,6 +123,7 @@ IncomingBindingMap: A::IncomingBindingMap =
 pub(crate) WebidlTypeRef: A::WebidlTypeRef = {
     <a:WebidlTypeRefNamed> => a.into(),
     <a:WebidlTypeRefIndexed> => a.into(),
+    <a:WebidlScalarType> => a.into(),
 };
 
 WebidlTypeRefNamed: A::WebidlTypeRefNamed =
@@ -132,6 +133,41 @@ WebidlTypeRefNamed: A::WebidlTypeRefNamed =
 WebidlTypeRefIndexed: A::WebidlTypeRefIndexed =
     <idx: Unsigned> =>
         actions.webidl_type_ref_indexed(idx);
+
+WebidlScalarType: A::WebidlScalarType = {
+    "any" => actions.webidl_scalar_type_any(),
+    "boolean" => actions.webidl_scalar_type_boolean(),
+    "byte" => actions.webidl_scalar_type_byte(),
+    "octet" => actions.webidl_scalar_type_octet(),
+    "long" => actions.webidl_scalar_type_long(),
+    "unsigned long" => actions.webidl_scalar_type_unsigned_long(),
+    "short" => actions.webidl_scalar_type_short(),
+    "unsigned short" => actions.webidl_scalar_type_unsigned_short(),
+    "long long" => actions.webidl_scalar_type_long_long(),
+    "unsigned long long" => actions.webidl_scalar_type_unsigned_long_long(),
+    "float" => actions.webidl_scalar_type_float(),
+    "unrestricted float" => actions.webidl_scalar_type_unrestricted_float(),
+    "double" => actions.webidl_scalar_type_double(),
+    "unrestricted double" => actions.webidl_scalar_type_unrestricted_double(),
+    "DOMString" => actions.webidl_scalar_type_dom_string(),
+    "ByteString" => actions.webidl_scalar_type_byte_string(),
+    "USVString" => actions.webidl_scalar_type_usv_string(),
+    "object" => actions.webidl_scalar_type_object(),
+    "symbol" => actions.webidl_scalar_type_symbol(),
+
+    // "Scalar" arrays.
+    "ArrayBuffer" => actions.webidl_scalar_type_array_buffer(),
+    "DataView" => actions.webidl_scalar_type_data_view(),
+    "Int8Array" => actions.webidl_scalar_type_int8_array(),
+    "Int16Array" => actions.webidl_scalar_type_int16_array(),
+    "Int32Array" => actions.webidl_scalar_type_int32_array(),
+    "Uint8Array" => actions.webidl_scalar_type_uint8_array(),
+    "Uint16Array" => actions.webidl_scalar_type_uint16_array(),
+    "Uint32Array" => actions.webidl_scalar_type_uint32_array(),
+    "Uint8ClampedArray" => actions.webidl_scalar_type_uint8_clamped_array(),
+    "Float32Array" => actions.webidl_scalar_type_float32_array(),
+    "Float64Array" => actions.webidl_scalar_type_float64_array(),
+};
 
 pub(crate) WasmValType: A::WasmValType = {
     "i32" => actions.wasm_val_type_i32(),

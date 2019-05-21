@@ -333,6 +333,98 @@ impl Actions for BuildAstActions {
         WebidlTypeRefIndexed { idx }
     }
 
+    type WebidlScalarType = WebidlScalarType;
+    fn webidl_scalar_type_any(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Any
+    }
+    fn webidl_scalar_type_boolean(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Boolean
+    }
+    fn webidl_scalar_type_byte(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Byte
+    }
+    fn webidl_scalar_type_octet(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Octet
+    }
+    fn webidl_scalar_type_long(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Long
+    }
+    fn webidl_scalar_type_unsigned_long(&mut self) -> WebidlScalarType {
+        WebidlScalarType::UnsignedLong
+    }
+    fn webidl_scalar_type_short(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Short
+    }
+    fn webidl_scalar_type_unsigned_short(&mut self) -> WebidlScalarType {
+        WebidlScalarType::UnsignedShort
+    }
+    fn webidl_scalar_type_long_long(&mut self) -> WebidlScalarType {
+        WebidlScalarType::LongLong
+    }
+    fn webidl_scalar_type_unsigned_long_long(&mut self) -> WebidlScalarType {
+        WebidlScalarType::UnsignedLongLong
+    }
+    fn webidl_scalar_type_float(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Float
+    }
+    fn webidl_scalar_type_unrestricted_float(&mut self) -> WebidlScalarType {
+        WebidlScalarType::UnrestrictedFloat
+    }
+    fn webidl_scalar_type_double(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Double
+    }
+    fn webidl_scalar_type_unrestricted_double(&mut self) -> WebidlScalarType {
+        WebidlScalarType::UnrestrictedDouble
+    }
+    fn webidl_scalar_type_dom_string(&mut self) -> WebidlScalarType {
+        WebidlScalarType::DomString
+    }
+    fn webidl_scalar_type_byte_string(&mut self) -> WebidlScalarType {
+        WebidlScalarType::ByteString
+    }
+    fn webidl_scalar_type_usv_string(&mut self) -> WebidlScalarType {
+        WebidlScalarType::UsvString
+    }
+    fn webidl_scalar_type_object(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Object
+    }
+    fn webidl_scalar_type_symbol(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Symbol
+    }
+    fn webidl_scalar_type_array_buffer(&mut self) -> WebidlScalarType {
+        WebidlScalarType::ArrayBuffer
+    }
+    fn webidl_scalar_type_data_view(&mut self) -> WebidlScalarType {
+        WebidlScalarType::DataView
+    }
+    fn webidl_scalar_type_int8_array(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Int8Array
+    }
+    fn webidl_scalar_type_int16_array(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Int16Array
+    }
+    fn webidl_scalar_type_int32_array(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Int32Array
+    }
+    fn webidl_scalar_type_uint8_array(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Uint8Array
+    }
+    fn webidl_scalar_type_uint16_array(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Uint16Array
+    }
+    fn webidl_scalar_type_uint32_array(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Uint32Array
+    }
+    fn webidl_scalar_type_uint8_clamped_array(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Uint8ClampedArray
+    }
+    fn webidl_scalar_type_float32_array(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Float32Array
+    }
+    fn webidl_scalar_type_float64_array(&mut self) -> WebidlScalarType {
+        WebidlScalarType::Float64Array
+    }
+
     type WasmValType = walrus::ValType;
     fn wasm_val_type_i32(&mut self) -> walrus::ValType {
         walrus::ValType::I32
@@ -393,13 +485,13 @@ impl Actions for BuildAstActions {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WebidlBindingsSection {
     pub types: WebidlTypeSubsection,
     pub bindings: WebidlFunctionBindingsSubsection,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WebidlTypeSubsection {
     pub types: Vec<WebidlType>,
 }
@@ -410,13 +502,13 @@ impl From<Vec<WebidlType>> for WebidlTypeSubsection {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WebidlType {
     pub name: Option<String>,
     pub ty: WebidlCompoundType,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum WebidlCompoundType {
     Function(WebidlFunction),
     Dictionary(WebidlDictionary),
@@ -448,14 +540,14 @@ impl From<WebidlUnion> for WebidlCompoundType {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WebidlFunction {
     pub kind: WebidlFunctionKind,
     pub params: Vec<WebidlTypeRef>,
     pub result: Option<WebidlTypeRef>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum WebidlFunctionKind {
     Static,
     Method(WebidlFunctionKindMethod),
@@ -468,39 +560,39 @@ impl From<WebidlFunctionKindMethod> for WebidlFunctionKind {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WebidlFunctionKindMethod {
     pub ty: WebidlTypeRef,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WebidlDictionary {
     pub fields: Vec<WebidlDictionaryField>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WebidlDictionaryField {
     pub name: String,
     pub ty: WebidlTypeRef,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WebidlEnumeration {
     pub values: Vec<String>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WebidlUnion {
     pub members: Vec<WebidlTypeRef>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WebidlFunctionBindingsSubsection {
     pub bindings: Vec<FunctionBinding>,
     pub binds: Vec<Bind>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FunctionBinding {
     Import(ImportBinding),
     Export(ExportBinding),
@@ -518,7 +610,7 @@ impl From<ExportBinding> for FunctionBinding {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ImportBinding {
     pub name: Option<String>,
     pub wasm_ty: WasmFuncTypeRef,
@@ -527,7 +619,7 @@ pub struct ImportBinding {
     pub result: IncomingBindingMap,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExportBinding {
     pub name: Option<String>,
     pub wasm_ty: WasmFuncTypeRef,
@@ -536,23 +628,23 @@ pub struct ExportBinding {
     pub result: OutgoingBindingMap,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Bind {
     pub func: WasmFuncRef,
     pub binding: BindingRef,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OutgoingBindingMap {
     pub bindings: Vec<OutgoingBindingExpression>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IncomingBindingMap {
     pub bindings: Vec<IncomingBindingExpression>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OutgoingBindingExpression {
     As(OutgoingBindingExpressionAs),
     Utf8Str(OutgoingBindingExpressionUtf8Str),
@@ -612,59 +704,59 @@ impl From<OutgoingBindingExpressionBindExport> for OutgoingBindingExpression {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OutgoingBindingExpressionAs {
     pub ty: WebidlTypeRef,
     pub idx: u32,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OutgoingBindingExpressionUtf8Str {
     pub ty: WebidlTypeRef,
     pub offset: u32,
     pub length: u32,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OutgoingBindingExpressionUtf8CStr {
     pub ty: WebidlTypeRef,
     pub offset: u32,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OutgoingBindingExpressionI32ToEnum {
     pub ty: WebidlTypeRef,
     pub idx: u32,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OutgoingBindingExpressionView {
     pub ty: WebidlTypeRef,
     pub offset: u32,
     pub length: u32,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OutgoingBindingExpressionCopy {
     pub ty: WebidlTypeRef,
     pub offset: u32,
     pub length: u32,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OutgoingBindingExpressionDict {
     pub ty: WebidlTypeRef,
     pub fields: Vec<OutgoingBindingExpression>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OutgoingBindingExpressionBindExport {
     pub ty: WebidlTypeRef,
     pub binding: BindingRef,
     pub idx: u32,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum IncomingBindingExpression {
     Get(IncomingBindingExpressionGet),
     As(IncomingBindingExpressionAs),
@@ -717,52 +809,53 @@ impl From<IncomingBindingExpressionBindImport> for IncomingBindingExpression {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionGet {
     pub idx: u32,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionAs {
     pub ty: walrus::ValType,
     pub expr: Box<IncomingBindingExpression>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionAllocUtf8Str {
     pub alloc_func_name: String,
     pub expr: Box<IncomingBindingExpression>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionAllocCopy {
     pub alloc_func_name: String,
     pub expr: Box<IncomingBindingExpression>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionEnumToI32 {
     pub ty: WebidlTypeRef,
     pub expr: Box<IncomingBindingExpression>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionField {
     pub idx: u32,
     pub expr: Box<IncomingBindingExpression>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionBindImport {
     pub ty: WasmFuncTypeRef,
     pub binding: BindingRef,
     pub expr: Box<IncomingBindingExpression>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum WebidlTypeRef {
     Named(WebidlTypeRefNamed),
     Indexed(WebidlTypeRefIndexed),
+    Scalar(WebidlScalarType),
 }
 
 impl From<WebidlTypeRefNamed> for WebidlTypeRef {
@@ -777,17 +870,57 @@ impl From<WebidlTypeRefIndexed> for WebidlTypeRef {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+impl From<WebidlScalarType> for WebidlTypeRef {
+    fn from(s: WebidlScalarType) -> Self {
+        WebidlTypeRef::Scalar(s)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WebidlTypeRefNamed {
     pub name: String,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WebidlTypeRefIndexed {
     pub idx: u32,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum WebidlScalarType {
+    Any,
+    Boolean,
+    Byte,
+    Octet,
+    Long,
+    UnsignedLong,
+    Short,
+    UnsignedShort,
+    LongLong,
+    UnsignedLongLong,
+    Float,
+    UnrestrictedFloat,
+    Double,
+    UnrestrictedDouble,
+    DomString,
+    ByteString,
+    UsvString,
+    Object,
+    Symbol,
+    ArrayBuffer,
+    DataView,
+    Int8Array,
+    Int16Array,
+    Int32Array,
+    Uint8Array,
+    Uint16Array,
+    Uint32Array,
+    Uint8ClampedArray,
+    Float32Array,
+    Float64Array,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum WasmFuncTypeRef {
     Named(WasmFuncTypeRefNamed),
     Indexed(WasmFuncTypeRefIndexed),
@@ -805,17 +938,17 @@ impl From<WasmFuncTypeRefIndexed> for WasmFuncTypeRef {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WasmFuncTypeRefNamed {
     pub name: String,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WasmFuncTypeRefIndexed {
     pub idx: u32,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum WasmFuncRef {
     Named(WasmFuncRefNamed),
     Indexed(WasmFuncRefIndexed),
@@ -833,17 +966,17 @@ impl From<WasmFuncRefIndexed> for WasmFuncRef {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WasmFuncRefNamed {
     pub name: String,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WasmFuncRefIndexed {
     pub idx: u32,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BindingRef {
     Named(BindingRefNamed),
     Indexed(BindingRefIndexed),
@@ -861,12 +994,12 @@ impl From<BindingRefIndexed> for BindingRef {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BindingRefNamed {
     pub name: String,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BindingRefIndexed {
     pub idx: u32,
 }

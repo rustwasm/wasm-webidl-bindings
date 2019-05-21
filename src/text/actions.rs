@@ -243,13 +243,47 @@ pub trait Actions {
         expr: Self::IncomingBindingExpression,
     ) -> Self::IncomingBindingExpressionBindImport;
 
-    type WebidlTypeRef: From<Self::WebidlTypeRefNamed> + From<Self::WebidlTypeRefIndexed>;
+    type WebidlTypeRef: From<Self::WebidlTypeRefNamed>
+        + From<Self::WebidlTypeRefIndexed>
+        + From<Self::WebidlScalarType>;
 
     type WebidlTypeRefNamed;
     fn webidl_type_ref_named(&mut self, name: &str) -> Self::WebidlTypeRefNamed;
 
     type WebidlTypeRefIndexed;
     fn webidl_type_ref_indexed(&mut self, idx: u32) -> Self::WebidlTypeRefIndexed;
+
+    type WebidlScalarType;
+    fn webidl_scalar_type_any(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_boolean(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_byte(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_octet(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_long(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_unsigned_long(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_short(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_unsigned_short(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_long_long(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_unsigned_long_long(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_float(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_unrestricted_float(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_double(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_unrestricted_double(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_dom_string(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_byte_string(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_usv_string(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_object(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_symbol(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_array_buffer(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_data_view(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_int8_array(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_int16_array(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_int32_array(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_uint8_array(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_uint16_array(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_uint32_array(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_uint8_clamped_array(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_float32_array(&mut self) -> Self::WebidlScalarType;
+    fn webidl_scalar_type_float64_array(&mut self) -> Self::WebidlScalarType;
 
     type WasmValType;
     fn wasm_val_type_i32(&mut self) -> Self::WasmValType;

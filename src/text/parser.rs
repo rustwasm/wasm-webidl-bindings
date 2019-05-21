@@ -60,8 +60,8 @@ mod tests {
         r#"
         type $TextEncoderEncodeIntoResult
           (dict
-            (field "read" unsigned_long_long)
-            (field "written" unsigned_long_long))
+            (field "read" unsigned long long)
+            (field "written" unsigned long long))
 
         type $EncodeIntoFuncWebIDL
            (func (method any)
@@ -72,7 +72,7 @@ mod tests {
           (param
             (as any 0)
             (as any 1)
-            (view uint8 2 3))
+            (view Uint8Array 2 3))
           (result
             (as i64 (field 0 (get 0)))
             (as i64 (field 1 (get 0))))
@@ -88,15 +88,11 @@ mod tests {
                             fields: vec![
                                 WebidlDictionaryField {
                                     name: "read".into(),
-                                    ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
-                                        name: "unsigned_long_long".into(),
-                                    }),
+                                    ty: WebidlScalarType::UnsignedLongLong.into(),
                                 },
                                 WebidlDictionaryField {
                                     name: "written".into(),
-                                    ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
-                                        name: "unsigned_long_long".into(),
-                                    }),
+                                    ty: WebidlScalarType::UnsignedLongLong.into(),
                                 },
                             ],
                         }),
@@ -105,15 +101,11 @@ mod tests {
                         name: Some("$EncodeIntoFuncWebIDL".into()),
                         ty: WebidlCompoundType::Function(WebidlFunction {
                             kind: WebidlFunctionKind::Method(WebidlFunctionKindMethod {
-                                ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "any".into() }),
+                                ty: WebidlScalarType::Any.into(),
                             }),
                             params: vec![
-                                WebidlTypeRef::Named(WebidlTypeRefNamed {
-                                    name: "USVString".into()
-                                }),
-                                WebidlTypeRef::Named(WebidlTypeRefNamed {
-                                    name: "Uint8Array".into()
-                                }),
+                                WebidlScalarType::UsvString.into(),
+                                WebidlScalarType::Uint8Array.into(),
                             ],
                             result: Some(WebidlTypeRef::Named(WebidlTypeRefNamed {
                                 name: "$TextEncoderEncodeIntoResult".into()
@@ -134,17 +126,15 @@ mod tests {
                     params: OutgoingBindingMap {
                         bindings: vec![
                             OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
-                                ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "any".into() }),
+                                ty: WebidlScalarType::Any.into(),
                                 idx: 0
                             }),
                             OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
-                                ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "any".into() }),
+                                ty: WebidlScalarType::Any.into(),
                                 idx: 1
                             }),
                             OutgoingBindingExpression::View(OutgoingBindingExpressionView {
-                                ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
-                                    name: "uint8".into()
-                                }),
+                                ty: WebidlScalarType::Uint8Array.into(),
                                 offset: 2,
                                 length: 3
                             })
@@ -192,24 +182,20 @@ mod tests {
     ok!(
         webidl_type_func_ok_1,
         WebidlTypeParser,
-        "type $AddContactFuncWebIDL (func (method any) (param $Contact DOMString) (result bool))",
+        "type $AddContactFuncWebIDL (func (method any) (param $Contact DOMString) (result boolean))",
         WebidlType {
             name: Some("$AddContactFuncWebIDL".into()),
             ty: WebidlCompoundType::Function(WebidlFunction {
                 kind: WebidlFunctionKind::Method(WebidlFunctionKindMethod {
-                    ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "any".into() })
+                    ty: WebidlScalarType::Any.into()
                 }),
                 params: vec![
                     WebidlTypeRef::Named(WebidlTypeRefNamed {
                         name: "$Contact".into()
                     }),
-                    WebidlTypeRef::Named(WebidlTypeRefNamed {
-                        name: "DOMString".into()
-                    }),
+                    WebidlScalarType::DomString.into(),
                 ],
-                result: Some(WebidlTypeRef::Named(WebidlTypeRefNamed {
-                    name: "bool".into()
-                })),
+                result: Some(WebidlScalarType::Boolean.into()),
             })
         }
     );
@@ -221,15 +207,13 @@ mod tests {
             name: Some("$AddContactFuncWebIDL".into()),
             ty: WebidlCompoundType::Function(WebidlFunction {
                 kind: WebidlFunctionKind::Method(WebidlFunctionKindMethod {
-                    ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "any".into() })
+                    ty: WebidlScalarType::Any.into()
                 }),
                 params: vec![
                     WebidlTypeRef::Named(WebidlTypeRefNamed {
                         name: "$Contact".into()
                     }),
-                    WebidlTypeRef::Named(WebidlTypeRefNamed {
-                        name: "DOMString".into()
-                    }),
+                    WebidlScalarType::DomString.into(),
                 ],
                 result: None,
             })
@@ -243,9 +227,7 @@ mod tests {
             name: Some("$AddContactFuncWebIDL".into()),
             ty: WebidlCompoundType::Function(WebidlFunction {
                 kind: WebidlFunctionKind::Static,
-                params: vec![WebidlTypeRef::Named(WebidlTypeRefNamed {
-                    name: "DOMString".into()
-                })],
+                params: vec![WebidlScalarType::DomString.into()],
                 result: None,
             })
         }
@@ -298,9 +280,7 @@ mod tests {
             ty: WebidlCompoundType::Function(WebidlFunction {
                 kind: WebidlFunctionKind::Constructor,
                 params: vec![],
-                result: Some(WebidlTypeRef::Named(WebidlTypeRefNamed {
-                    name: "any".into()
-                })),
+                result: Some(WebidlScalarType::Any.into()),
             })
         }
     );
@@ -330,15 +310,11 @@ mod tests {
                 fields: vec![
                     WebidlDictionaryField {
                         name: "name".into(),
-                        ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
-                            name: "DOMString".into()
-                        }),
+                        ty: WebidlScalarType::DomString.into(),
                     },
                     WebidlDictionaryField {
                         name: "age".into(),
-                        ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
-                            name: "long".into()
-                        }),
+                        ty: WebidlScalarType::Long.into(),
                     },
                 ],
             }),
@@ -393,17 +369,13 @@ mod tests {
     ok!(
         webidl_type_union_ok_1,
         WebidlTypeParser,
-        "type MyUnion (union long bool)",
+        "type MyUnion (union long boolean)",
         WebidlType {
             name: Some("MyUnion".into()),
             ty: WebidlCompoundType::Union(WebidlUnion {
                 members: vec![
-                    WebidlTypeRef::Named(WebidlTypeRefNamed {
-                        name: "long".into(),
-                    }),
-                    WebidlTypeRef::Named(WebidlTypeRefNamed {
-                        name: "bool".into(),
-                    }),
+                    WebidlScalarType::Long.into(),
+                    WebidlScalarType::Boolean.into(),
                 ],
             })
         }
@@ -433,7 +405,7 @@ mod tests {
             webidl_ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "MyWebidlFunc".into() }),
             params: OutgoingBindingMap {
                 bindings: vec![OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
-                    ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "any".into() }),
+                    ty: WebidlScalarType::Any.into(),
                     idx: 0,
                 })],
             },
@@ -508,7 +480,7 @@ mod tests {
             },
             result: OutgoingBindingMap {
                 bindings: vec![OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
-                    ty: WebidlTypeRef::Named(WebidlTypeRefNamed { name: "any".into() }),
+                    ty: WebidlScalarType::Any.into(),
                     idx: 0,
                 })],
             },
@@ -652,9 +624,7 @@ mod tests {
         OutgoingBindingExpressionParser,
         "(as long 2)",
         OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
-            ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
-                name: "long".into()
-            }),
+            ty: WebidlScalarType::Long.into(),
             idx: 2
         })
     );
@@ -683,9 +653,7 @@ mod tests {
         OutgoingBindingExpressionParser,
         "(utf8-str DOMString 123 456)",
         OutgoingBindingExpression::Utf8Str(OutgoingBindingExpressionUtf8Str {
-            ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
-                name: "DOMString".into(),
-            }),
+            ty: WebidlScalarType::DomString.into(),
             offset: 123,
             length: 456,
         })
@@ -706,9 +674,7 @@ mod tests {
         OutgoingBindingExpressionParser,
         "(utf8-cstr DOMString 123)",
         OutgoingBindingExpression::Utf8CStr(OutgoingBindingExpressionUtf8CStr {
-            ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
-                name: "DOMString".into(),
-            }),
+            ty: WebidlScalarType::DomString.into(),
             offset: 123,
         })
     );
@@ -750,9 +716,7 @@ mod tests {
         OutgoingBindingExpressionParser,
         "(view Uint8Array 123 456)",
         OutgoingBindingExpression::View(OutgoingBindingExpressionView {
-            ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
-                name: "Uint8Array".into(),
-            }),
+            ty: WebidlScalarType::Uint8Array.into(),
             offset: 123,
             length: 456,
         })
@@ -773,9 +737,7 @@ mod tests {
         OutgoingBindingExpressionParser,
         "(copy Uint8Array 123 456)",
         OutgoingBindingExpression::Copy(OutgoingBindingExpressionCopy {
-            ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
-                name: "Uint8Array".into(),
-            }),
+            ty: WebidlScalarType::Uint8Array.into(),
             offset: 123,
             length: 456,
         })
@@ -801,16 +763,12 @@ mod tests {
             }),
             fields: vec![
                 OutgoingBindingExpression::Utf8Str(OutgoingBindingExpressionUtf8Str {
-                    ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
-                        name: "DOMString".into()
-                    }),
+                    ty: WebidlScalarType::DomString.into(),
                     offset: 0,
                     length: 1,
                 }),
                 OutgoingBindingExpression::As(OutgoingBindingExpressionAs {
-                    ty: WebidlTypeRef::Named(WebidlTypeRefNamed {
-                        name: "long".into()
-                    }),
+                    ty: WebidlScalarType::Long.into(),
                     idx: 2,
                 })
             ]

@@ -138,10 +138,36 @@ References to Web IDL types are encoded as `i32`s and come in two forms:
 
 ```
 webidl_type_reference ::= i:i32    (if i >= 0)     => index into Web IDL Type Subsection
-                      ::= i:i32    (if i == -1)    => TODO(web idl primitive types...)
-                      ::= i:i32    (if i == -2)    => TODO(web idl primitive types...)
-                      ::= i:i32    (if i == -3)    => TODO(web idl primitive types...)
-                      # etc...
+                      ::= i:i32    (if i == -1)    => any
+                      ::= i:i32    (if i == -2)    => boolean
+                      ::= i:i32    (if i == -3)    => byte
+                      ::= i:i32    (if i == -4)    => octet
+                      ::= i:i32    (if i == -5)    => long
+                      ::= i:i32    (if i == -6)    => unsigned long
+                      ::= i:i32    (if i == -7)    => short
+                      ::= i:i32    (if i == -8)    => unsigned short
+                      ::= i:i32    (if i == -9)    => long long
+                      ::= i:i32    (if i == -10)   => unsigned long long
+                      ::= i:i32    (if i == -11)   => float
+                      ::= i:i32    (if i == -12)   => unrestricted float
+                      ::= i:i32    (if i == -13)   => double
+                      ::= i:i32    (if i == -14)   => unrestricted double
+                      ::= i:i32    (if i == -15)   => DOMString
+                      ::= i:i32    (if i == -16)   => ByteString
+                      ::= i:i32    (if i == -17)   => USVString
+                      ::= i:i32    (if i == -18)   => object
+                      ::= i:i32    (if i == -19)   => symbol
+                      ::= i:i32    (if i == -20)   => ArrayBuffer
+                      ::= i:i32    (if i == -21)   => DataView
+                      ::= i:i32    (if i == -22)   => Int8Array
+                      ::= i:i32    (if i == -23)   => Int16Array
+                      ::= i:i32    (if i == -24)   => Int32Array
+                      ::= i:i32    (if i == -25)   => Uint8Array
+                      ::= i:i32    (if i == -26)   => Uint16Array
+                      ::= i:i32    (if i == -27)   => Uint32Array
+                      ::= i:i32    (if i == -28)   => Uint8clampedArray
+                      ::= i:i32    (if i == -29)   => Float32Array
+                      ::= i:i32    (if i == -30)   => Float64Array
 ```
 
 ## The Function Binding Subsection
