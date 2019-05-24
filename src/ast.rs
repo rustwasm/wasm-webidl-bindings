@@ -1,43 +1,304 @@
-use crate::text::Actions;
+use crate::text;
+use id_arena::{Arena, Id};
+use std::borrow::Cow;
+use std::collections::HashMap;
 
 #[derive(Debug, Default)]
-pub struct BuildAstActions;
+pub struct WebidlBindings {
+    pub types: WebidlTypes,
+    pub bindings: FunctionBindings,
+    pub binds: Binds,
+}
 
-impl Actions for BuildAstActions {
-    type WebidlBindingsSection = WebidlBindingsSection;
-
-    fn webidl_bindings_section(
-        &mut self,
-        types: WebidlTypeSubsection,
-        bindings: WebidlFunctionBindingsSubsection,
-    ) -> WebidlBindingsSection {
-        WebidlBindingsSection { types, bindings }
+impl walrus::CustomSection for WebidlBindings {
+    fn name(&self) -> &str {
+        "webidl-bindings"
     }
 
-    type WebidlTypeSubsection = WebidlTypeSubsection;
+    fn data(&self, ids_to_indices: &walrus::IdsToIndices) -> Cow<[u8]> {
+        let mut data = vec![];
+        crate::binary::encode(self, ids_to_indices, &mut data)
+            .expect("writing into a vec never fails");
+        data.into()
+    }
+}
 
-    type WebidlType = WebidlType;
-    fn webidl_type(&mut self, name: Option<&str>, ty: WebidlCompoundType) -> WebidlType {
-        let name = name.map(ToString::to_string);
-        WebidlType { name, ty }
+macro_rules! id_newtypes {
+    ( $( $name:ident($inner:ty), )* ) => {
+        $(
+            #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+            pub struct $name(pub(crate) Id<$inner>);
+
+            impl From<$name> for Id<$inner> {
+                #[inline]
+                fn from(id: $name) -> Id<$inner> {
+                    id.0
+                }
+            }
+        )*
+    }
+}
+
+id_newtypes! {
+    WebidlFunctionId(WebidlCompoundType),
+    WebidlDictionaryId(WebidlCompoundType),
+    WebidlEnumerationId(WebidlCompoundType),
+    WebidlUnionId(WebidlCompoundType),
+
+    ImportBindingId(FunctionBinding),
+    ExportBindingId(FunctionBinding),
+}
+
+#[derive(Debug, Default)]
+pub struct WebidlTypes {
+    pub(crate) names: HashMap<String, Id<WebidlCompoundType>>,
+    indices: Vec<Id<WebidlCompoundType>>,
+    pub(crate) arena: Arena<WebidlCompoundType>,
+}
+
+pub trait WebidlTypeId: Into<WebidlCompoundType> {
+    type Id: Into<Id<WebidlCompoundType>>;
+
+    #[doc(hidden)]
+    fn wrap(id: Id<WebidlCompoundType>) -> Self::Id;
+    #[doc(hidden)]
+    fn get(ty: &WebidlCompoundType) -> Option<&Self>;
+    #[doc(hidden)]
+    fn get_mut(ty: &mut WebidlCompoundType) -> Option<&mut Self>;
+}
+
+macro_rules! impl_webidl_type_id {
+    ( $( $id:ident => $variant:ident($ty:ty); )* ) => {
+        $(
+            impl WebidlTypeId for $ty {
+                type Id = $id;
+
+                fn wrap(id: Id<WebidlCompoundType>) -> Self::Id {
+                    $id(id)
+                }
+
+                fn get(ty: &WebidlCompoundType) -> Option<&Self> {
+                    if let WebidlCompoundType::$variant(x) = ty {
+                        Some(x)
+                    } else {
+                        None
+                    }
+                }
+
+                fn get_mut(ty: &mut WebidlCompoundType) -> Option<&mut Self> {
+                    if let WebidlCompoundType::$variant(x) = ty {
+                        Some(x)
+                    } else {
+                        None
+                    }
+                }
+            }
+
+            impl From<$id> for WebidlTypeRef {
+                fn from(x: $id) -> WebidlTypeRef {
+                    WebidlTypeRef::Id(x.into())
+                }
+            }
+        )*
+    }
+}
+
+impl_webidl_type_id! {
+    WebidlFunctionId => Function(WebidlFunction);
+    WebidlDictionaryId => Dictionary(WebidlDictionary);
+    WebidlEnumerationId => Enumeration(WebidlEnumeration);
+    WebidlUnionId => Union(WebidlUnion);
+}
+
+impl WebidlTypes {
+    pub fn by_name(&self, name: &str) -> Option<Id<WebidlCompoundType>> {
+        self.names.get(name).cloned()
     }
 
-    type WebidlCompoundType = WebidlCompoundType;
+    pub fn by_index(&self, index: u32) -> Option<Id<WebidlCompoundType>> {
+        self.indices.get(index as usize).cloned()
+    }
 
-    type WebidlFunction = WebidlFunction;
+    pub fn get<T>(&self, id: T::Id) -> Option<&T>
+    where
+        T: WebidlTypeId,
+    {
+        self.arena.get(id.into()).and_then(T::get)
+    }
+
+    pub fn get_mut<T>(&mut self, id: T::Id) -> Option<&mut T>
+    where
+        T: WebidlTypeId,
+    {
+        self.arena.get_mut(id.into()).and_then(T::get_mut)
+    }
+
+    pub fn insert<T>(&mut self, ty: T) -> T::Id
+    where
+        T: WebidlTypeId,
+    {
+        let id = self.arena.alloc(ty.into());
+        self.indices.push(id);
+        T::wrap(id)
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct FunctionBindings {
+    pub(crate) names: HashMap<String, Id<FunctionBinding>>,
+    indices: Vec<Id<FunctionBinding>>,
+    pub(crate) arena: Arena<FunctionBinding>,
+}
+
+pub trait FunctionBindingId: Into<FunctionBinding> {
+    type Id: Into<Id<FunctionBinding>>;
+
+    #[doc(hidden)]
+    fn wrap(id: Id<FunctionBinding>) -> Self::Id;
+    #[doc(hidden)]
+    fn get(b: &FunctionBinding) -> Option<&Self>;
+    #[doc(hidden)]
+    fn get_mut(b: &mut FunctionBinding) -> Option<&mut Self>;
+}
+
+macro_rules! impl_function_binding_id {
+    ( $( $id:ident => $variant:ident($ty:ident); )* ) => {
+        $(
+            impl FunctionBindingId for $ty {
+                type Id = $id;
+
+                fn wrap(id: Id<FunctionBinding>) -> Self::Id {
+                    $id(id)
+                }
+
+                fn get(ty: &FunctionBinding) -> Option<&Self> {
+                    if let FunctionBinding::$variant(x) = ty {
+                        Some(x)
+                    } else {
+                        None
+                    }
+                }
+
+                fn get_mut(ty: &mut FunctionBinding) -> Option<&mut Self> {
+                    if let FunctionBinding::$variant(x) = ty {
+                        Some(x)
+                    } else {
+                        None
+                    }
+                }
+            }
+        )*
+    }
+}
+
+impl_function_binding_id! {
+    ImportBindingId => Import(ImportBinding);
+    ExportBindingId => Export(ExportBinding);
+}
+
+impl FunctionBindings {
+    pub fn by_name(&self, name: &str) -> Option<Id<FunctionBinding>> {
+        self.names.get(name).cloned()
+    }
+
+    pub fn by_index(&self, index: u32) -> Option<Id<FunctionBinding>> {
+        self.indices.get(index as usize).cloned()
+    }
+
+    pub fn get<T>(&self, id: T::Id) -> Option<&T>
+    where
+        T: FunctionBindingId,
+    {
+        self.arena.get(id.into()).and_then(T::get)
+    }
+
+    pub fn get_mut<T>(&mut self, id: T::Id) -> Option<&mut T>
+    where
+        T: FunctionBindingId,
+    {
+        self.arena.get_mut(id.into()).and_then(T::get_mut)
+    }
+
+    pub fn insert<T>(&mut self, binding: T) -> T::Id
+    where
+        T: FunctionBindingId,
+    {
+        let id = self.arena.alloc(binding.into());
+        self.indices.push(id);
+        T::wrap(id)
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct Binds {
+    pub(crate) arena: id_arena::Arena<Bind>,
+}
+
+impl Binds {
+    pub fn get(&self, id: Id<Bind>) -> Option<&Bind> {
+        self.arena.get(id.into())
+    }
+
+    pub fn get_mut(&mut self, id: Id<Bind>) -> Option<&mut Bind> {
+        self.arena.get_mut(id.into())
+    }
+
+    pub fn insert(&mut self, bind: Bind) -> Id<Bind> {
+        self.arena.alloc(bind)
+    }
+}
+
+#[derive(Debug)]
+pub struct BuildAstActions<'a> {
+    section: &'a mut WebidlBindings,
+    module: &'a walrus::Module,
+    ids: &'a walrus::IndicesToIds,
+}
+
+impl<'a> BuildAstActions<'a> {
+    pub fn new(
+        section: &'a mut WebidlBindings,
+        module: &'a walrus::Module,
+        ids: &'a walrus::IndicesToIds,
+    ) -> Self {
+        BuildAstActions {
+            section,
+            module,
+            ids,
+        }
+    }
+}
+
+impl<'a> text::Actions for BuildAstActions<'a> {
+    type WebidlBindingsSection = ();
+    fn webidl_bindings_section(&mut self, _types: (), _bindings: ()) {}
+
+    type WebidlTypeSubsection = ();
+    fn webidl_type_subsection(&mut self, _types: Vec<()>) {}
+
+    type WebidlType = ();
+    fn webidl_type(&mut self, name: Option<&str>, ty: Id<WebidlCompoundType>) {
+        if let Some(name) = name {
+            self.section.types.names.insert(name.to_string(), ty);
+        }
+    }
+
+    type WebidlCompoundType = Id<WebidlCompoundType>;
+
+    type WebidlFunction = WebidlFunctionId;
     fn webidl_function(
         &mut self,
         kind: Option<WebidlFunctionKind>,
         params: Option<Vec<WebidlTypeRef>>,
         result: Option<WebidlTypeRef>,
-    ) -> WebidlFunction {
+    ) -> WebidlFunctionId {
         let kind = kind.unwrap_or(WebidlFunctionKind::Static);
         let params = params.unwrap_or(vec![]);
-        WebidlFunction {
+        self.section.types.insert(WebidlFunction {
             kind,
             params,
             result,
-        }
+        })
     }
 
     type WebidlFunctionKind = WebidlFunctionKind;
@@ -62,9 +323,9 @@ impl Actions for BuildAstActions {
         ty
     }
 
-    type WebidlDictionary = WebidlDictionary;
-    fn webidl_dictionary(&mut self, fields: Vec<WebidlDictionaryField>) -> WebidlDictionary {
-        WebidlDictionary { fields }
+    type WebidlDictionary = WebidlDictionaryId;
+    fn webidl_dictionary(&mut self, fields: Vec<WebidlDictionaryField>) -> WebidlDictionaryId {
+        self.section.types.insert(WebidlDictionary { fields })
     }
 
     type WebidlDictionaryField = WebidlDictionaryField;
@@ -81,9 +342,9 @@ impl Actions for BuildAstActions {
         name.into()
     }
 
-    type WebidlEnumeration = WebidlEnumeration;
-    fn webidl_enumeration(&mut self, values: Vec<String>) -> WebidlEnumeration {
-        WebidlEnumeration { values }
+    type WebidlEnumeration = WebidlEnumerationId;
+    fn webidl_enumeration(&mut self, values: Vec<String>) -> WebidlEnumerationId {
+        self.section.types.insert(WebidlEnumeration { values })
     }
 
     type WebidlEnumerationValue = String;
@@ -91,63 +352,65 @@ impl Actions for BuildAstActions {
         value.into()
     }
 
-    type WebidlUnion = WebidlUnion;
-    fn webidl_union(&mut self, members: Vec<WebidlTypeRef>) -> WebidlUnion {
-        WebidlUnion { members }
+    type WebidlUnion = WebidlUnionId;
+    fn webidl_union(&mut self, members: Vec<WebidlTypeRef>) -> WebidlUnionId {
+        self.section.types.insert(WebidlUnion { members })
     }
 
-    type WebidlFunctionBindingsSubsection = WebidlFunctionBindingsSubsection;
-    fn webidl_function_bindings_subsection(
-        &mut self,
-        bindings: Vec<FunctionBinding>,
-        binds: Vec<Bind>,
-    ) -> WebidlFunctionBindingsSubsection {
-        WebidlFunctionBindingsSubsection { bindings, binds }
-    }
+    type WebidlFunctionBindingsSubsection = ();
+    fn webidl_function_bindings_subsection(&mut self, _bindings: Vec<()>, _binds: Vec<()>) {}
 
-    type FunctionBinding = FunctionBinding;
+    type FunctionBinding = ();
 
-    type ImportBinding = ImportBinding;
+    type ImportBinding = ();
     fn import_binding(
         &mut self,
         name: Option<&str>,
-        wasm_ty: WasmFuncTypeRef,
+        wasm_ty: walrus::TypeId,
         webidl_ty: WebidlTypeRef,
         params: OutgoingBindingMap,
         result: IncomingBindingMap,
-    ) -> ImportBinding {
-        let name = name.map(ToString::to_string);
-        ImportBinding {
-            name,
+    ) {
+        let id: ImportBindingId = self.section.bindings.insert(ImportBinding {
             wasm_ty,
             webidl_ty,
             params,
             result,
+        });
+        if let Some(name) = name {
+            self.section
+                .bindings
+                .names
+                .insert(name.to_string(), id.into());
         }
     }
 
-    type ExportBinding = ExportBinding;
+    type ExportBinding = ();
     fn export_binding(
         &mut self,
         name: Option<&str>,
-        wasm_ty: WasmFuncTypeRef,
+        wasm_ty: walrus::TypeId,
         webidl_ty: WebidlTypeRef,
         params: IncomingBindingMap,
         result: OutgoingBindingMap,
-    ) -> ExportBinding {
-        let name = name.map(ToString::to_string);
-        ExportBinding {
-            name,
+    ) {
+        let id: ExportBindingId = self.section.bindings.insert(ExportBinding {
             wasm_ty,
             webidl_ty,
             params,
             result,
+        });
+        if let Some(name) = name {
+            self.section
+                .bindings
+                .names
+                .insert(name.to_string(), id.into());
         }
     }
 
-    type Bind = Bind;
-    fn bind(&mut self, func: WasmFuncRef, binding: BindingRef) -> Bind {
-        Bind { func, binding }
+    type Bind = ();
+    fn bind(&mut self, func: walrus::FunctionId, binding: Id<FunctionBinding>) {
+        self.section.binds.insert(Bind { func, binding });
     }
 
     type OutgoingBindingMap = OutgoingBindingMap;
@@ -238,7 +501,7 @@ impl Actions for BuildAstActions {
     fn outgoing_binding_expression_bind_export(
         &mut self,
         ty: WebidlTypeRef,
-        binding: BindingRef,
+        binding: Id<FunctionBinding>,
         idx: u32,
     ) -> OutgoingBindingExpressionBindExport {
         OutgoingBindingExpressionBindExport { ty, binding, idx }
@@ -312,8 +575,8 @@ impl Actions for BuildAstActions {
     type IncomingBindingExpressionBindImport = IncomingBindingExpressionBindImport;
     fn incoming_binding_expression_bind_import(
         &mut self,
-        ty: WasmFuncTypeRef,
-        binding: BindingRef,
+        ty: walrus::TypeId,
+        binding: Id<FunctionBinding>,
         expr: IncomingBindingExpression,
     ) -> IncomingBindingExpressionBindImport {
         let expr = Box::new(expr);
@@ -322,15 +585,14 @@ impl Actions for BuildAstActions {
 
     type WebidlTypeRef = WebidlTypeRef;
 
-    type WebidlTypeRefNamed = WebidlTypeRefNamed;
-    fn webidl_type_ref_named(&mut self, name: &str) -> WebidlTypeRefNamed {
-        let name = name.to_string();
-        WebidlTypeRefNamed { name }
+    type WebidlTypeRefNamed = WebidlTypeRef;
+    fn webidl_type_ref_named(&mut self, name: &str) -> Option<WebidlTypeRef> {
+        self.section.types.by_name(name).map(Into::into)
     }
 
-    type WebidlTypeRefIndexed = WebidlTypeRefIndexed;
-    fn webidl_type_ref_indexed(&mut self, idx: u32) -> WebidlTypeRefIndexed {
-        WebidlTypeRefIndexed { idx }
+    type WebidlTypeRefIndexed = WebidlTypeRef;
+    fn webidl_type_ref_indexed(&mut self, idx: u32) -> Option<WebidlTypeRef> {
+        self.section.types.by_index(idx).map(Into::into)
     }
 
     type WebidlScalarType = WebidlScalarType;
@@ -445,60 +707,40 @@ impl Actions for BuildAstActions {
         walrus::ValType::Anyref
     }
 
-    type WasmFuncTypeRef = WasmFuncTypeRef;
+    type WasmFuncTypeRef = walrus::TypeId;
 
-    type WasmFuncTypeRefNamed = WasmFuncTypeRefNamed;
-    fn wasm_func_type_ref_named(&mut self, name: &str) -> WasmFuncTypeRefNamed {
-        let name = name.to_string();
-        WasmFuncTypeRefNamed { name }
+    type WasmFuncTypeRefNamed = walrus::TypeId;
+    fn wasm_func_type_ref_named(&mut self, name: &str) -> Option<walrus::TypeId> {
+        self.module.types.by_name(name)
     }
 
-    type WasmFuncTypeRefIndexed = WasmFuncTypeRefIndexed;
-    fn wasm_func_type_ref_indexed(&mut self, idx: u32) -> WasmFuncTypeRefIndexed {
-        WasmFuncTypeRefIndexed { idx }
+    type WasmFuncTypeRefIndexed = walrus::TypeId;
+    fn wasm_func_type_ref_indexed(&mut self, idx: u32) -> Option<walrus::TypeId> {
+        self.ids.get_type(idx).ok()
     }
 
-    type WasmFuncRef = WasmFuncRef;
+    type WasmFuncRef = walrus::FunctionId;
 
-    type WasmFuncRefNamed = WasmFuncRefNamed;
-    fn wasm_func_ref_named(&mut self, name: &str) -> WasmFuncRefNamed {
-        let name = name.to_string();
-        WasmFuncRefNamed { name }
+    type WasmFuncRefNamed = walrus::FunctionId;
+    fn wasm_func_ref_named(&mut self, name: &str) -> Option<walrus::FunctionId> {
+        self.module.funcs.by_name(name)
     }
 
-    type WasmFuncRefIndexed = WasmFuncRefIndexed;
-    fn wasm_func_ref_indexed(&mut self, idx: u32) -> WasmFuncRefIndexed {
-        WasmFuncRefIndexed { idx }
+    type WasmFuncRefIndexed = walrus::FunctionId;
+    fn wasm_func_ref_indexed(&mut self, idx: u32) -> Option<walrus::FunctionId> {
+        self.ids.get_func(idx).ok()
     }
 
-    type BindingRef = BindingRef;
+    type BindingRef = Id<FunctionBinding>;
 
-    type BindingRefNamed = BindingRefNamed;
-    fn binding_ref_named(&mut self, name: &str) -> BindingRefNamed {
-        let name = name.to_string();
-        BindingRefNamed { name }
+    type BindingRefNamed = Id<FunctionBinding>;
+    fn binding_ref_named(&mut self, name: &str) -> Option<Id<FunctionBinding>> {
+        self.section.bindings.by_name(name)
     }
 
-    type BindingRefIndexed = BindingRefIndexed;
-    fn binding_ref_indexed(&mut self, idx: u32) -> BindingRefIndexed {
-        BindingRefIndexed { idx }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct WebidlBindingsSection {
-    pub types: WebidlTypeSubsection,
-    pub bindings: WebidlFunctionBindingsSubsection,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct WebidlTypeSubsection {
-    pub types: Vec<WebidlType>,
-}
-
-impl From<Vec<WebidlType>> for WebidlTypeSubsection {
-    fn from(types: Vec<WebidlType>) -> Self {
-        WebidlTypeSubsection { types }
+    type BindingRefIndexed = Id<FunctionBinding>;
+    fn binding_ref_indexed(&mut self, idx: u32) -> Option<Id<FunctionBinding>> {
+        self.section.bindings.by_index(idx)
     }
 }
 
@@ -587,12 +829,6 @@ pub struct WebidlUnion {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct WebidlFunctionBindingsSubsection {
-    pub bindings: Vec<FunctionBinding>,
-    pub binds: Vec<Bind>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FunctionBinding {
     Import(ImportBinding),
     Export(ExportBinding),
@@ -612,8 +848,7 @@ impl From<ExportBinding> for FunctionBinding {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ImportBinding {
-    pub name: Option<String>,
-    pub wasm_ty: WasmFuncTypeRef,
+    pub wasm_ty: walrus::TypeId,
     pub webidl_ty: WebidlTypeRef,
     pub params: OutgoingBindingMap,
     pub result: IncomingBindingMap,
@@ -621,8 +856,7 @@ pub struct ImportBinding {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExportBinding {
-    pub name: Option<String>,
-    pub wasm_ty: WasmFuncTypeRef,
+    pub wasm_ty: walrus::TypeId,
     pub webidl_ty: WebidlTypeRef,
     pub params: IncomingBindingMap,
     pub result: OutgoingBindingMap,
@@ -630,8 +864,8 @@ pub struct ExportBinding {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Bind {
-    pub func: WasmFuncRef,
-    pub binding: BindingRef,
+    pub func: walrus::FunctionId,
+    pub binding: Id<FunctionBinding>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -752,7 +986,7 @@ pub struct OutgoingBindingExpressionDict {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OutgoingBindingExpressionBindExport {
     pub ty: WebidlTypeRef,
-    pub binding: BindingRef,
+    pub binding: Id<FunctionBinding>,
     pub idx: u32,
 }
 
@@ -846,28 +1080,15 @@ pub struct IncomingBindingExpressionField {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IncomingBindingExpressionBindImport {
-    pub ty: WasmFuncTypeRef,
-    pub binding: BindingRef,
+    pub ty: walrus::TypeId,
+    pub binding: Id<FunctionBinding>,
     pub expr: Box<IncomingBindingExpression>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WebidlTypeRef {
-    Named(WebidlTypeRefNamed),
-    Indexed(WebidlTypeRefIndexed),
+    Id(Id<WebidlCompoundType>),
     Scalar(WebidlScalarType),
-}
-
-impl From<WebidlTypeRefNamed> for WebidlTypeRef {
-    fn from(n: WebidlTypeRefNamed) -> Self {
-        WebidlTypeRef::Named(n)
-    }
-}
-
-impl From<WebidlTypeRefIndexed> for WebidlTypeRef {
-    fn from(i: WebidlTypeRefIndexed) -> Self {
-        WebidlTypeRef::Indexed(i)
-    }
 }
 
 impl From<WebidlScalarType> for WebidlTypeRef {
@@ -876,17 +1097,13 @@ impl From<WebidlScalarType> for WebidlTypeRef {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct WebidlTypeRefNamed {
-    pub name: String,
+impl From<Id<WebidlCompoundType>> for WebidlTypeRef {
+    fn from(i: Id<WebidlCompoundType>) -> Self {
+        WebidlTypeRef::Id(i)
+    }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct WebidlTypeRefIndexed {
-    pub idx: u32,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WebidlScalarType {
     Any,
     Boolean,
@@ -918,88 +1135,4 @@ pub enum WebidlScalarType {
     Uint8ClampedArray,
     Float32Array,
     Float64Array,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum WasmFuncTypeRef {
-    Named(WasmFuncTypeRefNamed),
-    Indexed(WasmFuncTypeRefIndexed),
-}
-
-impl From<WasmFuncTypeRefNamed> for WasmFuncTypeRef {
-    fn from(n: WasmFuncTypeRefNamed) -> Self {
-        WasmFuncTypeRef::Named(n)
-    }
-}
-
-impl From<WasmFuncTypeRefIndexed> for WasmFuncTypeRef {
-    fn from(i: WasmFuncTypeRefIndexed) -> Self {
-        WasmFuncTypeRef::Indexed(i)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct WasmFuncTypeRefNamed {
-    pub name: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct WasmFuncTypeRefIndexed {
-    pub idx: u32,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum WasmFuncRef {
-    Named(WasmFuncRefNamed),
-    Indexed(WasmFuncRefIndexed),
-}
-
-impl From<WasmFuncRefNamed> for WasmFuncRef {
-    fn from(n: WasmFuncRefNamed) -> Self {
-        WasmFuncRef::Named(n)
-    }
-}
-
-impl From<WasmFuncRefIndexed> for WasmFuncRef {
-    fn from(i: WasmFuncRefIndexed) -> Self {
-        WasmFuncRef::Indexed(i)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct WasmFuncRefNamed {
-    pub name: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct WasmFuncRefIndexed {
-    pub idx: u32,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum BindingRef {
-    Named(BindingRefNamed),
-    Indexed(BindingRefIndexed),
-}
-
-impl From<BindingRefNamed> for BindingRef {
-    fn from(n: BindingRefNamed) -> Self {
-        BindingRef::Named(n)
-    }
-}
-
-impl From<BindingRefIndexed> for BindingRef {
-    fn from(i: BindingRefIndexed) -> Self {
-        BindingRef::Indexed(i)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct BindingRefNamed {
-    pub name: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct BindingRefIndexed {
-    pub idx: u32,
 }

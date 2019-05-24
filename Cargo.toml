@@ -7,11 +7,9 @@ edition = "2018"
 [dependencies]
 failure = "0.1.5"
 leb128 = "0.2.4"
-walrus = "0.7.0"
+walrus = "0.8.0"
 wasm-webidl-bindings-text-parser = { path = "crates/text-parser" }
-
-[patch.crates-io]
-wasm-webidl-bindings-text-parser = { path = "crates/text-parser" }
+id-arena = "2.2.1"
 
 [workspace]
 members = [
