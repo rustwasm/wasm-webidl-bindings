@@ -1,0 +1,15 @@
+[package]
+name = "wasm-webidl-bindings-text-parser"
+version = "0.1.0"
+authors = ["The Rust and WebAssembly Working Group"]
+edition = "2018"
+
+[build-dependencies]
+lalrpop = "0.17.0"
+
+[dependencies]
+failure = "0.1.5"
+lalrpop-util = "0.17.0"
+leb128 = "0.2.4"
+regex = "1.1.6"
+walrus = "0.7.0"

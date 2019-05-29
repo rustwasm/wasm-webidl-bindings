@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 grammar<A>(actions: &mut A)
-    where A: crate::text::Actions;
+    where A: crate::Actions;
 
 pub(crate) WebidlBindingsSection: A::WebidlBindingsSection =
     <types:WebidlTypeSubsection> <bindings:WebidlFunctionBindingsSubsection> =>
