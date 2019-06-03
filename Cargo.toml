@@ -5,11 +5,15 @@ authors = ["Nick Fitzgerald <fitzgen@gmail.com>", "The Rust and WebAssembly Work
 edition = "2018"
 
 [dependencies]
-lalrpop-util = "0.17.0"
-regex = "1.1.6"
 failure = "0.1.5"
 leb128 = "0.2.4"
 walrus = "0.7.0"
+wasm-webidl-bindings-text-parser = { path = "crates/text-parser" }
 
-[build-dependencies]
-lalrpop = "0.17.0"
+[patch.crates-io]
+wasm-webidl-bindings-text-parser = { path = "crates/text-parser" }
+
+[workspace]
+members = [
+    "crates/text-parser"
+]
