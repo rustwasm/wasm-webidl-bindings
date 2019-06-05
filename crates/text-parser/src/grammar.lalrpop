@@ -1,14 +1,19 @@
 use std::str::FromStr;
+use crate::error::error;
 
 grammar<A>(actions: &mut A)
     where A: crate::Actions;
+
+extern {
+    type Error = String;
+}
 
 pub(crate) WebidlBindingsSection: A::WebidlBindingsSection =
     <types:WebidlTypeSubsection> <bindings:WebidlFunctionBindingsSubsection> =>
         actions.webidl_bindings_section(types, bindings);
 
 WebidlTypeSubsection: A::WebidlTypeSubsection =
-    <types:WebidlType*> => types.into();
+    <types:WebidlType*> => actions.webidl_type_subsection(types);
 
 pub(crate) WebidlType: A::WebidlType =
     "type" <name:Identifier?> <ty:WebidlCompoundType> =>
@@ -127,12 +132,18 @@ pub(crate) WebidlTypeRef: A::WebidlTypeRef = {
 };
 
 WebidlTypeRefNamed: A::WebidlTypeRefNamed =
-    <s:Identifier> =>
-        actions.webidl_type_ref_named(s);
+    <s:Identifier> =>? {
+        actions
+            .webidl_type_ref_named(s)
+            .ok_or_else(|| error(format!("unknown Web IDL type name: '{}'", s)))
+    };
 
 WebidlTypeRefIndexed: A::WebidlTypeRefIndexed =
-    <idx: Unsigned> =>
-        actions.webidl_type_ref_indexed(idx);
+    <idx: Unsigned> =>? {
+        actions
+            .webidl_type_ref_indexed(idx)
+            .ok_or_else(|| error(format!("unknown Web IDL type index: {}", idx)))
+    };
 
 WebidlScalarType: A::WebidlScalarType = {
     "any" => actions.webidl_scalar_type_any(),
@@ -184,12 +195,18 @@ pub(crate) WasmFuncTypeRef: A::WasmFuncTypeRef = {
 };
 
 WasmFuncTypeRefNamed: A::WasmFuncTypeRefNamed =
-    <s:Identifier> =>
-        actions.wasm_func_type_ref_named(s);
+    <s:Identifier> =>? {
+        actions
+            .wasm_func_type_ref_named(s)
+            .ok_or_else(|| error(format!("unknown Wasm function type name: '{}'", s)))
+    };
 
 WasmFuncTypeRefIndexed: A::WasmFuncTypeRefIndexed =
-    <idx: Unsigned> =>
-        actions.wasm_func_type_ref_indexed(idx);
+    <idx: Unsigned> =>? {
+        actions
+            .wasm_func_type_ref_indexed(idx)
+            .ok_or_else(|| error(format!("unknown Wasm function type index: {}", idx)))
+    };
 
 pub(crate) WasmFuncRef: A::WasmFuncRef = {
     <a:WasmFuncRefNamed> => a.into(),
@@ -197,12 +214,18 @@ pub(crate) WasmFuncRef: A::WasmFuncRef = {
 };
 
 WasmFuncRefNamed: A::WasmFuncRefNamed =
-    <s:Identifier> =>
-        actions.wasm_func_ref_named(s);
+    <s:Identifier> =>? {
+        actions
+            .wasm_func_ref_named(s)
+            .ok_or_else(|| error(format!("unknown Wasm function name: '{}'", s)))
+    };
 
 WasmFuncRefIndexed: A::WasmFuncRefIndexed =
-    <idx: Unsigned> =>
-        actions.wasm_func_ref_indexed(idx);
+    <idx: Unsigned> =>? {
+        actions
+            .wasm_func_ref_indexed(idx)
+            .ok_or_else(|| error(format!("unknown Wasm function index: {}", idx)))
+    };
 
 pub(crate) BindingRef: A::BindingRef = {
     <a:BindingRefNamed> => a.into(),
@@ -210,12 +233,18 @@ pub(crate) BindingRef: A::BindingRef = {
 };
 
 BindingRefNamed: A::BindingRefNamed =
-    <s:Identifier> =>
-        actions.binding_ref_named(s);
+    <s:Identifier> =>? {
+        actions
+            .binding_ref_named(s)
+            .ok_or_else(|| error(format!("unknown function binding name: '{}'", s)))
+    };
 
 BindingRefIndexed: A::BindingRefIndexed =
-    <idx: Unsigned> =>
-        actions.binding_ref_indexed(idx);
+    <idx: Unsigned> =>? {
+        actions
+            .binding_ref_indexed(idx)
+            .ok_or_else(|| error(format!("unknown function binding index: {}", idx)))
+    };
 
 pub(crate) OutgoingBindingExpression: A::OutgoingBindingExpression = {
     <a:OutgoingBindingExpressionAs> => a.into(),

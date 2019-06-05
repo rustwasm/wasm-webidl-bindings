@@ -23,10 +23,10 @@
 #### Parsing the Text Format and Encoding it in the Binary Format
 
 ```rust
-use wasm_webidl_bindings::{ast::BuildAstActions, binary, text};
+use wasm_webidl_bindings::{binary, text};
 
-let mut actions = BuildAstActions::default();
-
+// Get the `walrus::Module` that this webidl-bindings section is for.
+//
 // The Wasm type and func that are being bound are:
 //
 //     (type $EncodeIntoFuncWasm
@@ -36,34 +36,51 @@ let mut actions = BuildAstActions::default();
 //     (func $encodeInto
 //       (import "TextEncoder" "encodeInto")
 //       (type $EncodeIntoFuncWasm))
-let ast = text::parse(&mut actions, r#"
-    type $TextEncoderEncodeIntoResult
-      (dict
-        (field "read" unsigned_long_long)
-        (field "written" unsigned_long_long))
+let raw_wasm: Vec<u8> = get_wasm_buffer_from_somewhere();
 
-    type $EncodeIntoFuncWebIDL
-       (func (method any)
-          (param USVString Uint8Array)
-          (result $TextEncoderEncodeIntoResult))
+let mut config = walrus::ModuleConfig::default();
 
-    func-binding $encodeIntoBinding import $EncodeIntoFuncWasm $EncodeIntoFuncWebIDL
-      (param
-        (as any 0)
-        (as any 1)
-        (view uint8 2 3))
-      (result
-        (as i64 (field 0 (get 0)))
-        (as i64 (field 1 (get 0))))
+// Register a function to run after the module is parsed, but with access to the
+// mapping from indices in the original Wasm binary to their newly assigned
+// walrus IDs.
+//
+// This is where we will parse the Web IDL bidnings text.
+config.on_parse(|module, indices_to_ids| {
+    let webidl_bindings = text::parse(module, indices_to_ids, r#"
+        type $TextEncoderEncodeIntoResult
+            (dict
+                (field "read" unsigned_long_long)
+                (field "written" unsigned_long_long))
 
-    bind $encodeInto $encodeIntoBinding
-"#)?;
+        type $EncodeIntoFuncWebIDL
+            (func (method any)
+                (param USVString Uint8Array)
+                (result $TextEncoderEncodeIntoResult))
 
-println!("The parsed AST is {:#?}", ast);
+        func-binding $encodeIntoBinding import $EncodeIntoFuncWasm $EncodeIntoFuncWebIDL
+            (param
+                (as any 0)
+                (as any 1)
+                (view uint8 2 3))
+            (result
+                (as i64 (field 0 (get 0)))
+                (as i64 (field 1 (get 0))))
 
-let mut buf = vec![];
-binary::encode(&ast, &mut buf)?;
+        bind $encodeInto $encodeIntoBinding
+    "#)?;
 
-println!("The encoded bindings section is {} bytes long", buf.len());
+    println!("The parsed Web IDL bindings are {:#?}", webidl_bindings);
+
+    // Insert the `webidl_bindings` into the module as a custom section.
+    module.customs.add(webidl_bindings);
+
+    Ok(())
+});
+
+let mut module = config.parse(&raw_wasm)?;
+
+// Reserialize the Wasm module along with its new Web IDL bindings
+// section.
+let new_raw_wasm = module.emit_wasm();
 ```
 
