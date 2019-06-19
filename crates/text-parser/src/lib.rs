@@ -2,6 +2,7 @@
 
 mod actions;
 mod error;
+mod lexer;
 mod parser;
 
 pub use actions::Actions;

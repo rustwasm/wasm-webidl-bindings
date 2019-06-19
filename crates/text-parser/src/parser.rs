@@ -1,6 +1,7 @@
 #![allow(unused_imports, dead_code, missing_debug_implementations)]
 
 use crate::actions::Actions;
+use crate::lexer;
 
 include!(concat!(env!("OUT_DIR"), "/grammar.rs"));
 
@@ -16,8 +17,11 @@ pub fn parse_with_actions<A>(
 where
     A: Actions,
 {
+    let lexer_builder = lexer::LexerBuilder::new();
+    let lexer = lexer_builder.lexer(input);
+
     let ast = WebidlBindingsSectionParser::new()
-        .parse(actions, input)
+        .parse(input, actions, lexer)
         .map_err(|e| failure::format_err!("{}", e))?;
     Ok(ast)
 }
@@ -551,7 +555,10 @@ mod tests {
             #[test]
             fn $name() {
                 let actions = &mut BuildParseTree;
-                let actual = $parser::new().parse(actions, $input).unwrap();
+                let lexer_builder = crate::lexer::LexerBuilder::new();
+                let lexer = lexer_builder.lexer($input);
+
+                let actual = $parser::new().parse($input, actions, lexer).unwrap();
                 let expected = $output;
                 println!("actual = {:#?}", actual);
                 println!("expected = {:#?}", expected);
@@ -565,7 +572,10 @@ mod tests {
             #[test]
             fn $name() {
                 let actions = &mut BuildParseTree;
-                assert!($parser::new().parse(actions, $input).is_err());
+                let lexer_builder = crate::lexer::LexerBuilder::new();
+                let lexer = lexer_builder.lexer($input);
+
+                assert!($parser::new().parse($input, actions, lexer).is_err());
             }
         };
     }

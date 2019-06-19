@@ -1,12 +1,9 @@
 use std::str::FromStr;
 use crate::error::error;
+use crate::lexer::Token;
 
-grammar<A>(actions: &mut A)
+grammar<'input, A>(input: &'input str, actions: &mut A)
     where A: crate::Actions;
-
-extern {
-    type Error = String;
-}
 
 pub(crate) WebidlBindingsSection: A::WebidlBindingsSection =
     <types:WebidlTypeSubsection> <bindings:WebidlFunctionBindingsSubsection> =>
@@ -350,3 +347,84 @@ Unsigned: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();
 Identifier: &'input str = <r"[a-zA-Z$][a-zA-Z0-9$_]*">;
 
 QuotedString: &'input str = <r#""(([^\\"]|\\.)*)""#>;
+
+extern {
+    type Location = usize;
+    type Error = String;
+
+    enum Token<'input> {
+        "(" => Token::LeftParenthesis,
+        ")" => Token::RightParenthesis,
+        "ArrayBuffer" => Token::ArrayBuffer,
+        "ByteString" => Token::ByteString,
+        "DOMString" => Token::DOMString,
+        "DataView" => Token::DataView,
+        "Float32Array" => Token::Float32Array,
+        "Float64Array" => Token::Float64Array,
+        "Int16Array" => Token::Int16Array,
+        "Int32Array" => Token::Int32Array,
+        "Int8Array" => Token::Int8Array,
+        "USVString" => Token::USVString,
+        "Uint16Array" => Token::Uint16Array,
+        "Uint32Array" => Token::Uint32Array,
+        "Uint8Array" => Token::Uint8Array,
+        "Uint8ClampedArray" => Token::Uint8ClampedArray,
+        "alloc-copy" => Token::AllocCopy,
+        "alloc-utf8-cstr" => Token::AllocUtf8CStr,
+        "alloc-utf8-str" => Token::AllocUtf8Str,
+        "any" => Token::Any,
+        "anyref" => Token::Anyref,
+        "as" => Token::As,
+        "bind" => Token::Bind,
+        "bind-export" => Token::BindExport,
+        "bind-import" => Token::BindImport,
+        "boolean" => Token::Boolean,
+        "byte" => Token::Byte,
+        "constructor" => Token::Constructor,
+        "copy" => Token::Copy,
+        "default-new-target" => Token::DefaultNewTarget,
+        "dict" => Token::Dict,
+        "double" => Token::Double,
+        "enum" => Token::Enum,
+        "enum-to-i32" => Token::EnumToI32,
+        "export" => Token::Export,
+        "f32" => Token::F32,
+        "f64" => Token::F64,
+        "field" => Token::Field,
+        "float" => Token::Float,
+        "func" => Token::Func,
+        "func-binding" => Token::FuncBinding,
+        "get" => Token::Get,
+        "i32" => Token::I32,
+        "i32-to-enum" => Token::I32ToEnum,
+        "i64" => Token::I64,
+        "import" => Token::Import,
+        "long long" => Token::LongLong,
+        "long" => Token::Long,
+        "method" => Token::Method,
+        "object" => Token::Object,
+        "octet" => Token::Octet,
+        "param" => Token::Param,
+        "result" => Token::Result,
+        "short" => Token::Short,
+        "symbol" => Token::Symbol,
+        "type" => Token::Type,
+        "union" => Token::Union,
+        "unrestricted double" => Token::UnrestrictedDouble,
+        "unrestricted float" => Token::UnrestrictedFloat,
+        "unsigned long long" => Token::UnsignedLongLong,
+        "unsigned long" => Token::UnsignedLong,
+        "unsigned short" => Token::UnsignedShort,
+        "utf8-cstr" => Token::Utf8CStr,
+        "utf8-str" => Token::Utf8Str,
+        "v128" => Token::V128,
+        "view" => Token::View,
+        r"[0-9]+" => Token::Unsigned(<&'input str>),
+        r"[a-zA-Z$][a-zA-Z0-9$_]*" => Token::Identifier(<&'input str>),
+        r#""(([^\\"]|\\.)*)""# => Token::QuotedString(<&'input str>),
+    }
+}
+
+// Local Variables:
+// mode: rust
+// End:
