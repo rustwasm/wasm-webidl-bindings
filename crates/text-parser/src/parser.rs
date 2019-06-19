@@ -593,6 +593,7 @@ mod tests {
         //       (import "TextEncoder" "encodeInto")
         //       (type $EncodeIntoFuncWasm))
         r#"
+        ;; Define the signature of `encodeInto`.
         type $TextEncoderEncodeIntoResult
           (; a dictionary with 2 fields: `read` and `written`. ; dict
             (field "read" unsigned long long)
@@ -603,6 +604,7 @@ mod tests {
               (param USVString Uint8Array)
               (result $TextEncoderEncodeIntoResult))
 
+        ;; Apply the binding.
         func-binding $encodeIntoBinding import $EncodeIntoFuncWasm $EncodeIntoFuncWebIDL
           (param
             (as any 0)
