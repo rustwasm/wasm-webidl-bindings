@@ -83,6 +83,7 @@ impl<'input> fmt::Display for Token<'input> {
 pub struct LexerBuilder {
     regex_set: RegexSet,
     regex_vec: Vec<Regex>,
+    skip_regex: Regex,
 }
 
 impl LexerBuilder {
@@ -165,6 +166,7 @@ impl LexerBuilder {
                 .iter()
                 .map(|lexeme| Regex::new(lexeme).unwrap())
                 .collect(),
+            skip_regex: Regex::new(r#"^\p{White_Space}+"#).unwrap(),
         }
     }
 
@@ -174,6 +176,7 @@ impl LexerBuilder {
             consumed: 0,
             regex_set: &self.regex_set,
             regex_vec: &self.regex_vec,
+            skip_regex: &self.skip_regex,
         }
     }
 }
@@ -183,15 +186,23 @@ pub struct Lexer<'input, 'builder> {
     consumed: usize,
     regex_set: &'builder RegexSet,
     regex_vec: &'builder Vec<Regex>,
+    skip_regex: &'builder Regex,
 }
 
 impl<'input, 'builder> Iterator for Lexer<'input, 'builder> {
     type Item = Result<(usize, Token<'input>, usize), String>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let input = self.input.trim_start();
-        let whitespace = self.input.len() - input.len();
-        let start_offset = self.consumed + whitespace;
+        let (input, input_offset) = match self.skip_regex.find(self.input) {
+            Some(match_) => {
+                let offset = match_.end();
+
+                (&self.input[offset..], offset)
+            }
+
+            None => (self.input, 0),
+        };
+        let start_offset = self.consumed + input_offset;
 
         if input.is_empty() {
             self.input = input;
