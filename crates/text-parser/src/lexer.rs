@@ -166,7 +166,7 @@ impl LexerBuilder {
                 .iter()
                 .map(|lexeme| Regex::new(lexeme).unwrap())
                 .collect(),
-            skip_regex: Regex::new(r#"^\p{White_Space}+"#).unwrap(),
+            skip_regex: Regex::new(r#"^(\p{White_Space}+|;[^;]+;)+"#).unwrap(),
         }
     }
 

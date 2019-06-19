@@ -594,7 +594,7 @@ mod tests {
         //       (type $EncodeIntoFuncWasm))
         r#"
         type $TextEncoderEncodeIntoResult
-          (dict
+          (; a dictionary with 2 fields: `read` and `written`. ; dict
             (field "read" unsigned long long)
             (field "written" unsigned long long))
 
