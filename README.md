@@ -44,7 +44,7 @@ let mut config = walrus::ModuleConfig::default();
 // mapping from indices in the original Wasm binary to their newly assigned
 // walrus IDs.
 //
-// This is where we will parse the Web IDL bidnings text.
+// This is where we will parse the Web IDL bindings text.
 config.on_parse(|module, indices_to_ids| {
     let webidl_bindings = text::parse(module, indices_to_ids, r#"
         type $TextEncoderEncodeIntoResult
