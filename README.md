@@ -49,8 +49,8 @@ config.on_parse(|module, indices_to_ids| {
     let webidl_bindings = text::parse(module, indices_to_ids, r#"
         type $TextEncoderEncodeIntoResult
             (dict
-                (field "read" unsigned_long_long)
-                (field "written" unsigned_long_long))
+                (field "read" unsigned long long)
+                (field "written" unsigned long long))
 
         type $EncodeIntoFuncWebIDL
             (func (method any)
@@ -61,7 +61,7 @@ config.on_parse(|module, indices_to_ids| {
             (param
                 (as any 0)
                 (as any 1)
-                (view uint8 2 3))
+                (view Int8Array 2 3))
             (result
                 (as i64 (field 0 (get 0)))
                 (as i64 (field 1 (get 0))))
