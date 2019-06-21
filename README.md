@@ -10,7 +10,7 @@
 
 ### What's Inside
 
-* A parser for the straw proposal text format. See `src/text/grammar.lalrpop`.
+* A parser for the straw proposal text format. See `crates/text-parser/src/grammar.lalrpop`.
 
 * A set of AST types for representing and manipulating WebIDL bindings. See
   `src/ast.rs`.
