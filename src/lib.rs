@@ -50,8 +50,8 @@ config.on_parse(|module, indices_to_ids| {
     let webidl_bindings = text::parse(module, indices_to_ids, r#"
         type $TextEncoderEncodeIntoResult
             (dict
-                (field "read" unsigned_long_long)
-                (field "written" unsigned_long_long))
+                (field "read" unsigned long long)
+                (field "written" unsigned long long))
 
         type $EncodeIntoFuncWebIDL
             (func (method any)
