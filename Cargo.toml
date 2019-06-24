@@ -8,10 +8,13 @@ edition = "2018"
 failure = "0.1.5"
 leb128 = "0.2.4"
 walrus = "0.8.0"
-wasm-webidl-bindings-text-parser = { path = "crates/text-parser" }
+wasm-webidl-bindings-text-parser = { path = "crates/text-parser", optional = true }
 id-arena = "2.2.1"
 
 [workspace]
 members = [
     "crates/text-parser"
 ]
+
+[features]
+text = ['wasm-webidl-bindings-text-parser']

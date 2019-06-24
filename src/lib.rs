@@ -93,4 +93,5 @@ let new_raw_wasm = module.emit_wasm();
 
 pub mod ast;
 pub mod binary;
+#[cfg(feature = "text")]
 pub mod text;

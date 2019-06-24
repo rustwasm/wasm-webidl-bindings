@@ -1,3 +1,4 @@
+#[cfg(feature = "text")]
 use crate::text;
 use id_arena::{Arena, Id};
 use std::borrow::Cow;
@@ -269,6 +270,7 @@ impl<'a> BuildAstActions<'a> {
     }
 }
 
+#[cfg(feature = "text")]
 impl<'a> text::Actions for BuildAstActions<'a> {
     type WebidlBindingsSection = ();
     fn webidl_bindings_section(&mut self, _types: (), _bindings: ()) {}
