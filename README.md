@@ -23,6 +23,7 @@
 #### Parsing the Text Format and Encoding it in the Binary Format
 
 ```rust
+#[cfg(feature = "text")]
 use wasm_webidl_bindings::{binary, text};
 
 // Get the `walrus::Module` that this webidl-bindings section is for.

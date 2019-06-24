@@ -22,6 +22,7 @@
 ### Parsing the Text Format and Encoding it in the Binary Format
 
 ```rust
+#[cfg(feature = "text")]
 # fn foo() -> Result<(), failure::Error> {
 use wasm_webidl_bindings::{binary, text};
 
