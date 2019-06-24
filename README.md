@@ -10,7 +10,7 @@
 
 ### What's Inside
 
-* A parser for the straw proposal text format. See `src/text/grammar.lalrpop`.
+* A parser for the straw proposal text format. See `crates/text-parser/src/grammar.lalrpop`.
 
 * A set of AST types for representing and manipulating WebIDL bindings. See
   `src/ast.rs`.
@@ -44,13 +44,13 @@ let mut config = walrus::ModuleConfig::default();
 // mapping from indices in the original Wasm binary to their newly assigned
 // walrus IDs.
 //
-// This is where we will parse the Web IDL bidnings text.
+// This is where we will parse the Web IDL bindings text.
 config.on_parse(|module, indices_to_ids| {
     let webidl_bindings = text::parse(module, indices_to_ids, r#"
         type $TextEncoderEncodeIntoResult
             (dict
-                (field "read" unsigned_long_long)
-                (field "written" unsigned_long_long))
+                (field "read" unsigned long long)
+                (field "written" unsigned long long))
 
         type $EncodeIntoFuncWebIDL
             (func (method any)
@@ -61,7 +61,7 @@ config.on_parse(|module, indices_to_ids| {
             (param
                 (as any 0)
                 (as any 1)
-                (view uint8 2 3))
+                (view Int8Array 2 3))
             (result
                 (as i64 (field 0 (get 0)))
                 (as i64 (field 1 (get 0))))
