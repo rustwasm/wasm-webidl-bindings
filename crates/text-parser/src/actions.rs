@@ -95,8 +95,8 @@ pub trait Actions {
         name: Option<&str>,
         wasm_ty: Self::WasmFuncTypeRef,
         webidl_ty: Self::WebidlTypeRef,
-        params: Self::OutgoingBindingMap,
-        result: Self::IncomingBindingMap,
+        params: Option<Self::OutgoingBindingMap>,
+        result: Option<Self::IncomingBindingMap>,
     ) -> Self::ImportBinding;
 
     type ExportBinding;
@@ -105,8 +105,8 @@ pub trait Actions {
         name: Option<&str>,
         wasm_ty: Self::WasmFuncTypeRef,
         webidl_ty: Self::WebidlTypeRef,
-        params: Self::IncomingBindingMap,
-        result: Self::OutgoingBindingMap,
+        params: Option<Self::IncomingBindingMap>,
+        result: Option<Self::OutgoingBindingMap>,
     ) -> Self::ExportBinding;
 
     type Bind;

@@ -96,9 +96,15 @@ pub(crate) ImportBinding: A::ImportBinding =
     "import"
     <wasm_ty:WasmFuncTypeRef>
     <webidl_ty:WebidlTypeRef>
-    "(" "param" <params:OutgoingBindingMap> ")"
-    "(" "result" <result:IncomingBindingMap> ")" =>
-        actions.import_binding(name, wasm_ty, webidl_ty, params, result);
+    <webidl_params:("(" "param" OutgoingBindingMap ")")?>
+    <webidl_result:("(" "result" IncomingBindingMap ")")?> =>
+        actions.import_binding(
+            name,
+            wasm_ty,
+            webidl_ty,
+            webidl_params.map(|params| params.2),
+            webidl_result.map(|result| result.2),
+        );
 
 pub(crate) ExportBinding: A::ExportBinding =
     "func-binding"
@@ -106,9 +112,15 @@ pub(crate) ExportBinding: A::ExportBinding =
     "export"
     <wasm_ty:WasmFuncTypeRef>
     <webidl_ty:WebidlTypeRef>
-    "(" "param" <params:IncomingBindingMap> ")"
-    "(" "result" <result:OutgoingBindingMap> ")" =>
-        actions.export_binding(name, wasm_ty, webidl_ty, params, result);
+    <webidl_params:("(" "param" IncomingBindingMap ")")?>
+    <webidl_result:("(" "result" OutgoingBindingMap ")")?> =>
+        actions.export_binding(
+            name,
+            wasm_ty,
+            webidl_ty,
+            webidl_params.map(|params| params.2),
+            webidl_result.map(|result| result.2),
+        );
 
 pub(crate) Bind: A::Bind =
     "bind" <func:WasmFuncRef> <binding:BindingRef> =>

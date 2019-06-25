@@ -207,8 +207,8 @@ mod tests {
             name: Option<&str>,
             wasm_ty: Self::WasmFuncTypeRef,
             webidl_ty: Self::WebidlTypeRef,
-            params: Self::OutgoingBindingMap,
-            result: Self::IncomingBindingMap,
+            params: Option<Self::OutgoingBindingMap>,
+            result: Option<Self::IncomingBindingMap>,
         ) -> Self::ImportBinding {
             t!("ImportBinding" name wasm_ty webidl_ty params result)
         }
@@ -219,8 +219,8 @@ mod tests {
             name: Option<&str>,
             wasm_ty: Self::WasmFuncTypeRef,
             webidl_ty: Self::WebidlTypeRef,
-            params: Self::IncomingBindingMap,
-            result: Self::OutgoingBindingMap,
+            params: Option<Self::IncomingBindingMap>,
+            result: Option<Self::OutgoingBindingMap>,
         ) -> Self::ExportBinding {
             t!("ExportBinding" name wasm_ty webidl_ty params result)
         }
@@ -641,7 +641,7 @@ mod tests {
                     t!("Some" "$encodeIntoBinding")
                     t!("WasmFuncTypeRefNamed" "$EncodeIntoFuncWasm")
                     t!("WebidlTypeRefNamed" "$EncodeIntoFuncWebIDL")
-                    t!("OutgoingBindingMap"
+                    t!("Some" t!("OutgoingBindingMap"
                        t!(t!("OutgoingBindingExpressionAs"
                              t!("WebidlScalarType" "any")
                              0)
@@ -651,8 +651,8 @@ mod tests {
                           t!("OutgoingBindingExpressionView"
                              t!("WebidlScalarType" "Uint8Array")
                              2
-                             3)))
-                    t!("IncomingBindingMap"
+                             3))))
+                    t!("Some" t!("IncomingBindingMap"
                        t!(t!("IncomingBindingExpressionAs"
                              t!("WasmValType" "i64")
                              t!("IncomingBindingExpressionField"
@@ -662,7 +662,7 @@ mod tests {
                              t!("WasmValType" "i64")
                              t!("IncomingBindingExpressionField"
                                 1
-                                t!("IncomingBindingExpressionGet" 0)))))))
+                                t!("IncomingBindingExpressionGet" 0))))))))
                 t!(t!("Bind"
                       t!("WasmFuncRefNamed" "$encodeInto")
                       t!("BindingRefNamed" "$encodeIntoBinding")))))
@@ -867,22 +867,22 @@ mod tests {
            t!("Some" "Yoyo")
            t!("WasmFuncTypeRefNamed" "MyWasmFunc")
            t!("WebidlTypeRefNamed" "MyWebidlFunc")
-           t!("OutgoingBindingMap"
+           t!("Some" t!("OutgoingBindingMap"
               t!(
                   t!("OutgoingBindingExpressionAs"
                      t!("WebidlScalarType" "any")
                      0
                   )
               )
-           )
-           t!("IncomingBindingMap"
+           ))
+           t!("Some" t!("IncomingBindingMap"
               t!(
                   t!("IncomingBindingExpressionAs"
                      t!("WasmValType" "i32")
                      t!("IncomingBindingExpressionGet" 0)
                   )
               )
-           )
+           ))
         )
     );
     ok!(
@@ -893,19 +893,33 @@ mod tests {
            t!("None")
            t!("WasmFuncTypeRefNamed" "MyWasmFunc")
            t!("WebidlTypeRefNamed" "MyWebidlFunc")
-           t!("OutgoingBindingMap" t!())
-           t!("IncomingBindingMap" t!())
+           t!("Some" t!("OutgoingBindingMap" t!()))
+           t!("Some" t!("IncomingBindingMap" t!()))
         )
     );
-    err!(
-        import_binding_err_1,
+    ok!(
+        import_binding_ok_3,
         ImportBindingParser,
-        "func-binding import MyWasmFunc MyWebidlFunc (param)"
+        "func-binding import MyWasmFunc MyWebidlFunc (param)",
+        t!("ImportBinding"
+           t!("None")
+           t!("WasmFuncTypeRefNamed" "MyWasmFunc")
+           t!("WebidlTypeRefNamed" "MyWebidlFunc")
+           t!("Some" t!("OutgoingBindingMap" t!()))
+           t!("None")
+        )
     );
-    err!(
-        import_binding_err_2,
+    ok!(
+        import_binding_ok_4,
         ImportBindingParser,
-        "func-binding import MyWasmFunc MyWebidlFunc (result)"
+        "func-binding import MyWasmFunc MyWebidlFunc (result)",
+        t!("ImportBinding"
+           t!("None")
+           t!("WasmFuncTypeRefNamed" "MyWasmFunc")
+           t!("WebidlTypeRefNamed" "MyWebidlFunc")
+           t!("None")
+           t!("Some" t!("IncomingBindingMap" t!()))
+        )
     );
     err!(
         import_binding_err_3,
@@ -936,22 +950,22 @@ mod tests {
            t!("Some" "$Yoyo")
            t!("WasmFuncTypeRefNamed" "MyWasmFunc")
            t!("WebidlTypeRefNamed" "MyWebidlFunc")
-           t!("IncomingBindingMap"
+           t!("Some" t!("IncomingBindingMap"
               t!(
                   t!("IncomingBindingExpressionAs"
                      t!("WasmValType" "i32")
                      t!("IncomingBindingExpressionGet" 0)
                   )
               )
-           )
-           t!("OutgoingBindingMap"
+           ))
+           t!("Some" t!("OutgoingBindingMap"
               t!(
                   t!("OutgoingBindingExpressionAs"
                      t!("WebidlScalarType" "any")
                      0
                   )
               )
-           )
+           ))
         )
     );
     ok!(
@@ -962,19 +976,33 @@ mod tests {
            t!("None")
            t!("WasmFuncTypeRefNamed" "$MyWasmFunc")
            t!("WebidlTypeRefNamed" "$MyWebidlFunc")
-           t!("IncomingBindingMap" t!())
-           t!("OutgoingBindingMap" t!())
+           t!("Some" t!("IncomingBindingMap" t!()))
+           t!("Some" t!("OutgoingBindingMap" t!()))
         )
     );
-    err!(
-        export_binding_err_1,
+    ok!(
+        export_binding_ok_3,
         ExportBindingParser,
-        "func-binding export MyWasmFunc MyWebidlFunc (param)"
+        "func-binding export $MyWasmFunc $MyWebidlFunc (param)",
+        t!("ExportBinding"
+           t!("None")
+           t!("WasmFuncTypeRefNamed" "$MyWasmFunc")
+           t!("WebidlTypeRefNamed" "$MyWebidlFunc")
+           t!("Some" t!("IncomingBindingMap" t!()))
+           t!("None")
+        )
     );
-    err!(
-        export_binding_err_2,
+    ok!(
+        export_binding_ok_4,
         ExportBindingParser,
-        "func-binding export MyWasmFunc MyWebidlFunc (result)"
+        "func-binding export $MyWasmFunc $MyWebidlFunc (result)",
+        t!("ExportBinding"
+           t!("None")
+           t!("WasmFuncTypeRefNamed" "$MyWasmFunc")
+           t!("WebidlTypeRefNamed" "$MyWebidlFunc")
+           t!("None")
+           t!("Some" t!("OutgoingBindingMap" t!()))
+        )
     );
     err!(
         export_binding_err_3,
