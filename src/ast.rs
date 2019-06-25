@@ -111,6 +111,22 @@ impl_webidl_type_id! {
     WebidlUnionId => Union(WebidlUnion);
 }
 
+impl WebidlTypeId for WebidlCompoundType {
+    type Id = Id<WebidlCompoundType>;
+
+    fn wrap(id: Id<WebidlCompoundType>) -> Self::Id {
+        id
+    }
+
+    fn get(ty: &WebidlCompoundType) -> Option<&Self> {
+        Some(ty)
+    }
+
+    fn get_mut(ty: &mut WebidlCompoundType) -> Option<&mut Self> {
+        Some(ty)
+    }
+}
+
 impl WebidlTypes {
     pub fn by_name(&self, name: &str) -> Option<Id<WebidlCompoundType>> {
         self.names.get(name).cloned()
