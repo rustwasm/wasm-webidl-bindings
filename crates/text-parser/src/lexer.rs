@@ -313,7 +313,7 @@ impl<'input, 'builder> Iterator for Lexer<'input, 'builder> {
                         r"^([0-9]+)" => Token::Unsigned(result),
                         r"^([a-zA-Z$][a-zA-Z0-9$_]*)" => Token::Identifier(result),
                         r#"^"(([^\\"]|\\.)*)""# => Token::QuotedString(result),
-                        _ => panic!("oh no"),
+                        _ => unreachable!(),
                     },
                     end_offset,
                 )))
