@@ -370,14 +370,14 @@ impl<'a> text::Actions for BuildAstActions<'a> {
         name: Option<&str>,
         wasm_ty: walrus::TypeId,
         webidl_ty: WebidlTypeRef,
-        params: OutgoingBindingMap,
-        result: IncomingBindingMap,
+        params: Option<OutgoingBindingMap>,
+        result: Option<IncomingBindingMap>,
     ) {
         let id: ImportBindingId = self.section.bindings.insert(ImportBinding {
             wasm_ty,
             webidl_ty,
-            params,
-            result,
+            params: params.unwrap_or_else(|| OutgoingBindingMap { bindings: vec![] }),
+            result: result.unwrap_or_else(|| IncomingBindingMap { bindings: vec![] }),
         });
         if let Some(name) = name {
             self.section
@@ -393,14 +393,14 @@ impl<'a> text::Actions for BuildAstActions<'a> {
         name: Option<&str>,
         wasm_ty: walrus::TypeId,
         webidl_ty: WebidlTypeRef,
-        params: IncomingBindingMap,
-        result: OutgoingBindingMap,
+        params: Option<IncomingBindingMap>,
+        result: Option<OutgoingBindingMap>,
     ) {
         let id: ExportBindingId = self.section.bindings.insert(ExportBinding {
             wasm_ty,
             webidl_ty,
-            params,
-            result,
+            params: params.unwrap_or_else(|| IncomingBindingMap { bindings: vec![] }),
+            result: result.unwrap_or_else(|| OutgoingBindingMap { bindings: vec![] }),
         });
         if let Some(name) = name {
             self.section
