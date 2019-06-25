@@ -424,7 +424,3 @@ extern {
         r#""(([^\\"]|\\.)*)""# => Token::QuotedString(<&'input str>),
     }
 }
-
-// Local Variables:
-// mode: rust
-// End:
