@@ -15,8 +15,9 @@
 * A set of AST types for representing and manipulating WebIDL bindings. See
   `src/ast.rs`.
 
-* An encoder for the straw proposal binary format. See the implementation at
-  `src/binary/encode.rs` and details on the format at `BINARY.md`.
+* An encoder and decoder for the straw proposal binary format. See the
+  implementation at `src/binary/encode.rs` and details on the format at
+  `BINARY.md`.
 
 ### Example
 
