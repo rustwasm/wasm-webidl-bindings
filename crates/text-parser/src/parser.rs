@@ -608,11 +608,11 @@ mod tests {
         func-binding $encodeIntoBinding import $EncodeIntoFuncWasm $EncodeIntoFuncWebIDL
           (param
             (as any 0)
-            (as any 1)
+            (as type=any idx=1)
             (view Uint8Array 2 3))
           (result
             (as i64 (field 0 (get 0)))
-            (as i64 (field 1 (get 0))))
+            (as i64 (field 1 (get idx=0))))
 
         bind $encodeInto $encodeIntoBinding
         "#,
@@ -1034,7 +1034,19 @@ mod tests {
     ok!(
         webidl_type_ref_ok_2,
         WebidlTypeRefParser,
+        "type=$Contact",
+        t!("WebidlTypeRefNamed" "$Contact")
+    );
+    ok!(
+        webidl_type_ref_ok_3,
+        WebidlTypeRefParser,
         "42",
+        t!("WebidlTypeRefIndexed" 42)
+    );
+    ok!(
+        webidl_type_ref_ok_4,
+        WebidlTypeRefParser,
+        "type=42",
         t!("WebidlTypeRefIndexed" 42)
     );
     err!(webidl_type_ref_err, WebidlTypeRefParser, "1abc");
@@ -1437,4 +1449,8 @@ mod tests {
         IncomingBindingExpressionParser,
         "(bind-import hello (get 1))"
     );
+
+    ok!(webidl_index_ok_1, WebidlIndexParser, "42", 42);
+    ok!(webidl_index_ok_2, WebidlIndexParser, "idx=42", 42);
+    err!(webidl_index_err_1, WebidlIndexParser, "idx=");
 }
