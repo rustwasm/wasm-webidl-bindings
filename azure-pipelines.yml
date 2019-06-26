@@ -14,4 +14,5 @@ jobs:
           set -ex
           export RUST_BACKTRACE=1
           cargo test --all
+          cargo test --all --all-features
         displayName: "Run `cargo test`"
