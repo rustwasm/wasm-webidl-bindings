@@ -1034,7 +1034,19 @@ mod tests {
     ok!(
         webidl_type_ref_ok_2,
         WebidlTypeRefParser,
+        "type=$Contact",
+        t!("WebidlTypeRefNamed" "$Contact")
+    );
+    ok!(
+        webidl_type_ref_ok_3,
+        WebidlTypeRefParser,
         "42",
+        t!("WebidlTypeRefIndexed" 42)
+    );
+    ok!(
+        webidl_type_ref_ok_4,
+        WebidlTypeRefParser,
+        "type=42",
         t!("WebidlTypeRefIndexed" 42)
     );
     err!(webidl_type_ref_err, WebidlTypeRefParser, "1abc");
