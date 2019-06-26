@@ -135,9 +135,9 @@ IncomingBindingMap: A::IncomingBindingMap =
         actions.incoming_binding_map(bindings);
 
 pub(crate) WebidlTypeRef: A::WebidlTypeRef = {
-    <a:WebidlTypeRefNamed> => a.into(),
-    <a:WebidlTypeRefIndexed> => a.into(),
-    <a:WebidlScalarType> => a.into(),
+    "type="? <a:WebidlTypeRefNamed> => a.into(),
+    "type="? <a:WebidlTypeRefIndexed> => a.into(),
+    "type="? <a:WebidlScalarType> => a.into(),
 };
 
 WebidlTypeRefNamed: A::WebidlTypeRefNamed =
@@ -420,6 +420,7 @@ extern {
         "result" => Token::Result,
         "short" => Token::Short,
         "symbol" => Token::Symbol,
+        "type=" => Token::TypeRef,
         "type" => Token::Type,
         "union" => Token::Union,
         "unrestricted double" => Token::UnrestrictedDouble,
