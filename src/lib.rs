@@ -96,3 +96,6 @@ pub mod ast;
 pub mod binary;
 #[cfg(feature = "text")]
 pub mod text;
+
+#[cfg(feature = "quickcheck")]
+mod quickcheck;

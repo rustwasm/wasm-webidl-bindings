@@ -4,7 +4,7 @@ use id_arena::{Arena, Id};
 use std::borrow::Cow;
 use std::collections::HashMap;
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct WebidlBindings {
     pub types: WebidlTypes,
     pub bindings: FunctionBindings,
@@ -50,7 +50,7 @@ id_newtypes! {
     ExportBindingId(FunctionBinding),
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct WebidlTypes {
     pub(crate) names: HashMap<String, Id<WebidlCompoundType>>,
     indices: Vec<Id<WebidlCompoundType>>,
@@ -160,7 +160,7 @@ impl WebidlTypes {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct FunctionBindings {
     pub(crate) names: HashMap<String, Id<FunctionBinding>>,
     indices: Vec<Id<FunctionBinding>>,
@@ -246,7 +246,7 @@ impl FunctionBindings {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Binds {
     pub(crate) arena: id_arena::Arena<Bind>,
 }

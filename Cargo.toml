@@ -10,6 +10,8 @@ leb128 = "0.2.4"
 walrus = "0.8.0"
 wasm-webidl-bindings-text-parser = { path = "crates/text-parser", optional = true }
 id-arena = "2.2.1"
+quickcheck = { version = "0.8.5", optional = true }
+rand = { version = "0.6.5", optional = true }
 
 [dev-dependencies]
 lazy_static = "1.3"
@@ -21,3 +23,4 @@ members = [
 
 [features]
 text = ['wasm-webidl-bindings-text-parser']
+quickchecking = ['rand', 'quickcheck']
