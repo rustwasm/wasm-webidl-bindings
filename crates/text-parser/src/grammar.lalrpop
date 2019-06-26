@@ -148,11 +148,13 @@ WebidlTypeRefNamed: A::WebidlTypeRefNamed =
     };
 
 WebidlTypeRefIndexed: A::WebidlTypeRefIndexed =
-    <idx: Unsigned> =>? {
+    <idx:Unsigned> =>? {
         actions
             .webidl_type_ref_indexed(idx)
             .ok_or_else(|| error(format!("unknown Web IDL type index: {}", idx)))
     };
+
+pub(crate) WebidlIndex: u32 = "idx="? <Unsigned>;
 
 WebidlScalarType: A::WebidlScalarType = {
     "any" => actions.webidl_scalar_type_any(),
@@ -211,7 +213,7 @@ WasmFuncTypeRefNamed: A::WasmFuncTypeRefNamed =
     };
 
 WasmFuncTypeRefIndexed: A::WasmFuncTypeRefIndexed =
-    <idx: Unsigned> =>? {
+    <idx:Unsigned> =>? {
         actions
             .wasm_func_type_ref_indexed(idx)
             .ok_or_else(|| error(format!("unknown Wasm function type index: {}", idx)))
@@ -230,7 +232,7 @@ WasmFuncRefNamed: A::WasmFuncRefNamed =
     };
 
 WasmFuncRefIndexed: A::WasmFuncRefIndexed =
-    <idx: Unsigned> =>? {
+    <idx:Unsigned> =>? {
         actions
             .wasm_func_ref_indexed(idx)
             .ok_or_else(|| error(format!("unknown Wasm function index: {}", idx)))
@@ -249,7 +251,7 @@ BindingRefNamed: A::BindingRefNamed =
     };
 
 BindingRefIndexed: A::BindingRefIndexed =
-    <idx: Unsigned> =>? {
+    <idx:Unsigned> =>? {
         actions
             .binding_ref_indexed(idx)
             .ok_or_else(|| error(format!("unknown function binding index: {}", idx)))
@@ -267,7 +269,7 @@ pub(crate) OutgoingBindingExpression: A::OutgoingBindingExpression = {
 };
 
 OutgoingBindingExpressionAs: A::OutgoingBindingExpressionAs =
-    "(" "as" <ty:WebidlTypeRef> <idx:Unsigned> ")" =>
+    "(" "as" <ty:WebidlTypeRef> <idx:WebidlIndex> ")" =>
         actions.outgoing_binding_expression_as(ty, idx);
 
 OutgoingBindingExpressionUtf8Str: A::OutgoingBindingExpressionUtf8Str =
@@ -279,7 +281,7 @@ OutgoingBindingExpressionUtf8CStr: A::OutgoingBindingExpressionUtf8CStr =
         actions.outgoing_binding_expression_utf8_c_str(ty, offset);
 
 OutgoingBindingExpressionI32ToEnum: A::OutgoingBindingExpressionI32ToEnum =
-    "(" "i32-to-enum" <ty:WebidlTypeRef> <idx:Unsigned> ")" =>
+    "(" "i32-to-enum" <ty:WebidlTypeRef> <idx:WebidlIndex> ")" =>
         actions.outgoing_binding_expression_i32_to_enum(ty, idx);
 
 OutgoingBindingExpressionView: A::OutgoingBindingExpressionView =
@@ -314,7 +316,7 @@ pub(crate) IncomingBindingExpression: A::IncomingBindingExpression = {
 };
 
 IncomingBindingExpressionGet: A::IncomingBindingExpressionGet =
-    "(" "get" <idx:Unsigned> ")" =>
+    "(" "get" <idx:WebidlIndex> ")" =>
         actions.incoming_binding_expression_get(idx);
 
 IncomingBindingExpressionAs: A::IncomingBindingExpressionAs =
@@ -410,6 +412,7 @@ extern {
         "i32" => Token::I32,
         "i32-to-enum" => Token::I32ToEnum,
         "i64" => Token::I64,
+        "idx=" => Token::Index,
         "import" => Token::Import,
         "long long" => Token::LongLong,
         "long" => Token::Long,
