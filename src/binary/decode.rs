@@ -147,6 +147,8 @@ impl ReadExt for &'_ [u8] {
     }
 }
 
+/// A type that implements `Extend` by dropping everything given to
+/// it. Analagous to `/dev/null`.
 struct Ignore;
 impl<T> Extend<T> for Ignore {
     fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
