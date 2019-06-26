@@ -252,16 +252,10 @@ pub trait Actions {
         + From<Self::WebidlScalarType>;
 
     type WebidlTypeRefNamed;
-    fn webidl_type_ref_named(
-        &mut self,
-        name: &str,
-    ) -> Option<Self::WebidlTypeRefNamed>;
+    fn webidl_type_ref_named(&mut self, name: &str) -> Option<Self::WebidlTypeRefNamed>;
 
     type WebidlTypeRefIndexed;
-    fn webidl_type_ref_indexed(
-        &mut self,
-        idx: u32,
-    ) -> Option<Self::WebidlTypeRefIndexed>;
+    fn webidl_type_ref_indexed(&mut self, idx: u32) -> Option<Self::WebidlTypeRefIndexed>;
 
     type WebidlScalarType;
     fn webidl_scalar_type_any(&mut self) -> Self::WebidlScalarType;
@@ -306,16 +300,10 @@ pub trait Actions {
     type WasmFuncTypeRef: From<Self::WasmFuncTypeRefNamed> + From<Self::WasmFuncTypeRefIndexed>;
 
     type WasmFuncTypeRefNamed;
-    fn wasm_func_type_ref_named(
-        &mut self,
-        name: &str,
-    ) -> Option<Self::WasmFuncTypeRefNamed>;
+    fn wasm_func_type_ref_named(&mut self, name: &str) -> Option<Self::WasmFuncTypeRefNamed>;
 
     type WasmFuncTypeRefIndexed;
-    fn wasm_func_type_ref_indexed(
-        &mut self,
-        idx: u32,
-    ) -> Option<Self::WasmFuncTypeRefIndexed>;
+    fn wasm_func_type_ref_indexed(&mut self, idx: u32) -> Option<Self::WasmFuncTypeRefIndexed>;
 
     type WasmFuncRef: From<Self::WasmFuncRefNamed> + From<Self::WasmFuncRefIndexed>;
 
@@ -323,8 +311,7 @@ pub trait Actions {
     fn wasm_func_ref_named(&mut self, name: &str) -> Option<Self::WasmFuncRefNamed>;
 
     type WasmFuncRefIndexed;
-    fn wasm_func_ref_indexed(&mut self, idx: u32)
-        -> Option<Self::WasmFuncRefIndexed>;
+    fn wasm_func_ref_indexed(&mut self, idx: u32) -> Option<Self::WasmFuncRefIndexed>;
 
     type BindingRef: From<Self::BindingRefNamed> + From<Self::BindingRefIndexed>;
 
