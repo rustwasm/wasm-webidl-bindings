@@ -168,5 +168,25 @@ mod tests {
             });
             config.parse(&buf).expect("should parse the wasm OK");
         }
+
+        fn doesnt_panic_on_arbitrary_bytes(data: Vec<u8>) -> () {
+            let mut module = walrus::Module::default();
+            module.customs.add(walrus::RawCustomSection {
+                name: "webidl-bindings".into(),
+                data,
+            });
+            let wasm_buf = module.emit_wasm().unwrap();
+
+            let mut config = walrus::ModuleConfig::default();
+            config.on_parse(|module, ids| {
+                let raw = module.customs.remove_raw("webidl-bindings").unwrap();
+
+                // This should never panic regardless what is in `data`.
+                let _ = crate::binary::decode(ids, &raw.data);
+
+                Ok(())
+            });
+            config.parse(&wasm_buf).unwrap();
+        }
     }
 }
