@@ -12,9 +12,7 @@ pub(crate) trait Decode {
     type Output;
 
     /// Decode an instance of `Self` into the given `cx`.
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read;
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error>;
 }
 
 pub(crate) struct DecodeContext<'a> {
@@ -72,7 +70,7 @@ trait ReadExt: Read {
     fn string(&mut self) -> Result<String, failure::Error>;
 }
 
-impl<R: Read> ReadExt for R {
+impl ReadExt for &'_ [u8] {
     fn read_byte(&mut self) -> Result<u8, failure::Error> {
         let mut buf = [0];
         self.read_exact(&mut buf)?;
@@ -159,10 +157,7 @@ impl<T> Extend<T> for Ignore {
 impl Decode for String {
     type Output = Self;
 
-    fn decode<R>(_cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(_cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         r.string()
     }
 }
@@ -173,10 +168,7 @@ where
 {
     type Output = Box<D::Output>;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         let d = D::decode(cx, r)?;
         Ok(Box::new(d))
     }
@@ -185,10 +177,7 @@ where
 impl Decode for WebidlBindings {
     type Output = ();
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<(), failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<(), failure::Error> {
         // Web IDL Type Subsection.
         WebidlTypes::decode(cx, r)?;
 
@@ -206,10 +195,7 @@ impl Decode for WebidlBindings {
 impl Decode for WebidlTypes {
     type Output = ();
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<(), failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<(), failure::Error> {
         r.expect_byte(0)?;
         r.vec::<WebidlType, _>(cx, &mut Ignore)
     }
@@ -218,10 +204,7 @@ impl Decode for WebidlTypes {
 impl Decode for WebidlType {
     type Output = Id<WebidlCompoundType>;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         let id = WebidlCompoundType::decode(cx, r)?;
         Ok(id.into())
     }
@@ -230,10 +213,7 @@ impl Decode for WebidlType {
 impl Decode for WebidlCompoundType {
     type Output = Id<WebidlCompoundType>;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         match r.read_byte()? {
             0 => WebidlFunction::decode(cx, r).map(Into::into),
             1 => WebidlDictionary::decode(cx, r).map(Into::into),
@@ -247,10 +227,7 @@ impl Decode for WebidlCompoundType {
 impl Decode for WebidlFunction {
     type Output = WebidlFunctionId;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         let kind = WebidlFunctionKind::decode(cx, r)?;
 
         let mut params = vec![];
@@ -269,10 +246,7 @@ impl Decode for WebidlFunction {
 impl Decode for WebidlFunctionKind {
     type Output = Self;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         match r.read_byte()? {
             0 => Ok(WebidlFunctionKind::Static),
             1 => {
@@ -291,10 +265,7 @@ impl Decode for WebidlFunctionKind {
 impl Decode for WebidlTypeRef {
     type Output = Self;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         use WebidlScalarType::*;
 
         fn scalar(s: WebidlScalarType) -> Result<WebidlTypeRef, failure::Error> {
@@ -349,10 +320,7 @@ impl Decode for WebidlTypeRef {
 impl Decode for WebidlDictionary {
     type Output = WebidlDictionaryId;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         let mut fields = vec![];
         r.vec::<WebidlDictionaryField, _>(cx, &mut fields)?;
         Ok(cx.webidl_bindings.types.insert(WebidlDictionary { fields }))
@@ -362,10 +330,7 @@ impl Decode for WebidlDictionary {
 impl Decode for WebidlDictionaryField {
     type Output = Self;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         let name = r.string()?;
         let ty = WebidlTypeRef::decode(cx, r)?;
         Ok(WebidlDictionaryField { name, ty })
@@ -375,10 +340,7 @@ impl Decode for WebidlDictionaryField {
 impl Decode for WebidlEnumeration {
     type Output = WebidlEnumerationId;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         let mut values = vec![];
         r.vec::<String, _>(cx, &mut values)?;
         Ok(cx
@@ -391,10 +353,7 @@ impl Decode for WebidlEnumeration {
 impl Decode for WebidlUnion {
     type Output = WebidlUnionId;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         let mut members = vec![];
         r.vec::<WebidlTypeRef, _>(cx, &mut members)?;
         Ok(cx.webidl_bindings.types.insert(WebidlUnion { members }))
@@ -404,10 +363,7 @@ impl Decode for WebidlUnion {
 impl Decode for FunctionBinding {
     type Output = Id<FunctionBinding>;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         match r.read_byte()? {
             0 => ImportBinding::decode(cx, r).map(Into::into),
             1 => ExportBinding::decode(cx, r).map(Into::into),
@@ -422,10 +378,7 @@ impl Decode for FunctionBinding {
 impl Decode for ImportBinding {
     type Output = ImportBindingId;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         let wasm_ty = walrus::TypeId::decode(cx, r)?;
         let webidl_ty = WebidlTypeRef::decode(cx, r)?;
         let params = OutgoingBindingMap::decode(cx, r)?;
@@ -443,10 +396,7 @@ impl Decode for ImportBinding {
 impl Decode for ExportBinding {
     type Output = ExportBindingId;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         let wasm_ty = walrus::TypeId::decode(cx, r)?;
         let webidl_ty = WebidlTypeRef::decode(cx, r)?;
         let params = IncomingBindingMap::decode(cx, r)?;
@@ -464,10 +414,7 @@ impl Decode for ExportBinding {
 impl Decode for walrus::ValType {
     type Output = Self;
 
-    fn decode<R>(_cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(_cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         match r.read_byte()? {
             0x7f => Ok(walrus::ValType::I32),
             0x7e => Ok(walrus::ValType::I64),
@@ -483,10 +430,7 @@ impl Decode for walrus::ValType {
 impl Decode for walrus::TypeId {
     type Output = Self;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         let index = r.uleb()?;
         cx.wasm_func_type_id(index)
     }
@@ -495,10 +439,7 @@ impl Decode for walrus::TypeId {
 impl Decode for OutgoingBindingMap {
     type Output = Self;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         let mut bindings = vec![];
         r.vec::<OutgoingBindingExpression, _>(cx, &mut bindings)?;
         Ok(OutgoingBindingMap { bindings })
@@ -508,10 +449,7 @@ impl Decode for OutgoingBindingMap {
 impl Decode for OutgoingBindingExpression {
     type Output = Self;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         fn e<T: Into<OutgoingBindingExpression>>(
             e: T,
         ) -> Result<OutgoingBindingExpression, failure::Error> {
@@ -575,10 +513,7 @@ impl Decode for OutgoingBindingExpression {
 impl Decode for Id<FunctionBinding> {
     type Output = Self;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         let index = r.uleb()?;
         cx.binding_id(index)
     }
@@ -587,10 +522,7 @@ impl Decode for Id<FunctionBinding> {
 impl Decode for IncomingBindingMap {
     type Output = Self;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         let mut bindings = vec![];
         r.vec::<IncomingBindingExpression, _>(cx, &mut bindings)?;
         Ok(IncomingBindingMap { bindings })
@@ -600,10 +532,7 @@ impl Decode for IncomingBindingMap {
 impl Decode for IncomingBindingExpression {
     type Output = Self;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         fn e<T: Into<IncomingBindingExpression>>(
             e: T,
         ) -> Result<IncomingBindingExpression, failure::Error> {
@@ -663,10 +592,7 @@ impl Decode for IncomingBindingExpression {
 impl Decode for Bind {
     type Output = Id<Bind>;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         let func = walrus::FunctionId::decode(cx, r)?;
         let binding = <Id<FunctionBinding>>::decode(cx, r)?;
         Ok(cx.webidl_bindings.binds.insert(Bind { func, binding }))
@@ -676,10 +602,7 @@ impl Decode for Bind {
 impl Decode for walrus::FunctionId {
     type Output = Self;
 
-    fn decode<R>(cx: &mut DecodeContext, r: &mut R) -> Result<Self::Output, failure::Error>
-    where
-        R: Read,
-    {
+    fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<Self::Output, failure::Error> {
         let index = r.uleb()?;
         cx.wasm_func_id(index)
     }

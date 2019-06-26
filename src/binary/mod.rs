@@ -23,11 +23,9 @@ where
 ///
 /// This does *not* parse the custom section discriminant and "webidl-bindings"
 /// custom section name, just the inner data.
-pub fn decode<R>(ids: &walrus::IndicesToIds, from: &mut R) -> Result<WebidlBindings, failure::Error>
-where
-    R: io::Read,
-{
+pub fn decode(ids: &walrus::IndicesToIds, from: &[u8]) -> Result<WebidlBindings, failure::Error> {
     let mut cx = DecodeContext::new(ids);
-    WebidlBindings::decode(&mut cx, from)?;
+    let mut from = from;
+    WebidlBindings::decode(&mut cx, &mut from)?;
     Ok(cx.webidl_bindings)
 }
