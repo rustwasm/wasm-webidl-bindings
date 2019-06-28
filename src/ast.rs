@@ -248,7 +248,8 @@ impl FunctionBindings {
 
 #[derive(Clone, Debug, Default)]
 pub struct Binds {
-    pub(crate) arena: id_arena::Arena<Bind>,
+    indices: Vec<Id<Bind>>,
+    pub(crate) arena: Arena<Bind>,
 }
 
 impl Binds {
@@ -261,7 +262,10 @@ impl Binds {
     }
 
     pub fn insert(&mut self, bind: Bind) -> Id<Bind> {
-        self.arena.alloc(bind)
+        let id = self.arena.alloc(bind);
+        self.indices.push(id);
+
+        id
     }
 }
 
