@@ -253,6 +253,10 @@ pub struct Binds {
 }
 
 impl Binds {
+    pub fn by_index(&self, index: u32) -> Option<Id<Bind>> {
+        self.indices.get(index as usize).cloned()
+    }
+
     pub fn get(&self, id: Id<Bind>) -> Option<&Bind> {
         self.arena.get(id.into())
     }
