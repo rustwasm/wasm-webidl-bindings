@@ -29,3 +29,18 @@ pub fn decode(ids: &walrus::IndicesToIds, from: &[u8]) -> Result<WebidlBindings,
     WebidlBindings::decode(&mut cx, &mut from)?;
     Ok(cx.webidl_bindings)
 }
+
+/// Callback for `walrus::ModuleConfig::on_parse` to parse thea webidl bindings
+/// custom section if one is found.
+pub fn on_parse(
+    module: &mut walrus::Module,
+    ids: &walrus::IndicesToIds,
+) -> Result<(), failure::Error> {
+    let section = match module.customs.remove_raw("webidl-bindings") {
+        Some(s) => s,
+        None => return Ok(()),
+    };
+    let bindings = decode(ids, &section.data)?;
+    module.customs.add(bindings);
+    Ok(())
+}
