@@ -263,6 +263,10 @@ impl Binds {
     pub fn insert(&mut self, bind: Bind) -> Id<Bind> {
         self.arena.alloc(bind)
     }
+
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (Id<Bind>, &'a Bind)> + 'a {
+        self.arena.iter()
+    }
 }
 
 #[derive(Debug)]
