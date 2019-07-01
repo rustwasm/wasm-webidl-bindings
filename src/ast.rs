@@ -208,6 +208,22 @@ macro_rules! impl_function_binding_id {
     }
 }
 
+impl FunctionBindingId for FunctionBinding {
+    type Id = Id<FunctionBinding>;
+
+    fn wrap(id: Id<FunctionBinding>) -> Self::Id {
+        id
+    }
+
+    fn get(ty: &FunctionBinding) -> Option<&Self> {
+        Some(ty)
+    }
+
+    fn get_mut(ty: &mut FunctionBinding) -> Option<&mut Self> {
+        Some(ty)
+    }
+}
+
 impl_function_binding_id! {
     ImportBindingId => Import(ImportBinding);
     ExportBindingId => Export(ExportBinding);
