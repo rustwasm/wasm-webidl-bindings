@@ -30,7 +30,7 @@ pub fn decode(ids: &walrus::IndicesToIds, from: &[u8]) -> Result<WebidlBindings,
     Ok(cx.webidl_bindings)
 }
 
-/// Callback for `walrus::ModuleConfig::on_parse` to parse thea webidl bindings
+/// Callback for `walrus::ModuleConfig::on_parse` to parse the webidl bindings
 /// custom section if one is found.
 pub fn on_parse(
     module: &mut walrus::Module,
