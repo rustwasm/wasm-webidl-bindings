@@ -981,7 +981,12 @@ pub struct ImportBinding {
 }
 
 impl ImportBinding {
-    fn is_expressible_in_js_without_webidl_bindings(
+    /// Is this import binding expressible in JS without Web IDL bindings, and
+    /// without a polyfill for them?
+    ///
+    /// See `FunctionBinding::is_expressible_in_js_without_webidl_bindings` for
+    /// details.
+    pub fn is_expressible_in_js_without_webidl_bindings(
         &self,
         module: &walrus::Module,
         wb: &WebidlBindings,
@@ -1009,7 +1014,12 @@ pub struct ExportBinding {
 }
 
 impl ExportBinding {
-    fn is_expressible_in_js_without_webidl_bindings(
+    /// Is this export binding expressible in JS without Web IDL bindings, and
+    /// without a polyfill for them?
+    ///
+    /// See `FunctionBinding::is_expressible_in_js_without_webidl_bindings` for
+    /// details.
+    pub fn is_expressible_in_js_without_webidl_bindings(
         &self,
         module: &walrus::Module,
         wb: &WebidlBindings,
@@ -1040,7 +1050,12 @@ pub struct OutgoingBindingMap {
 }
 
 impl OutgoingBindingMap {
-    fn is_expressible_in_js_without_webidl_bindings(
+    /// Is this outgoing binding map expressible in JS without Web IDL bindings,
+    /// and without a polyfill for them?
+    ///
+    /// See `FunctionBinding::is_expressible_in_js_without_webidl_bindings` for
+    /// details.
+    pub fn is_expressible_in_js_without_webidl_bindings(
         &self,
         from_wasm_tys: &[walrus::ValType],
         to_webidl_tys: &[WebidlTypeRef],
@@ -1092,7 +1107,12 @@ pub struct IncomingBindingMap {
 }
 
 impl IncomingBindingMap {
-    fn is_expressible_in_js_without_webidl_bindings(
+    /// Is this incoming binding map expressible in JS without Web IDL bindings,
+    /// and without a polyfill for them?
+    ///
+    /// See `FunctionBinding::is_expressible_in_js_without_webidl_bindings` for
+    /// details.
+    pub fn is_expressible_in_js_without_webidl_bindings(
         &self,
         from_webidl_tys: &[WebidlTypeRef],
         to_wasm_tys: &[walrus::ValType],
