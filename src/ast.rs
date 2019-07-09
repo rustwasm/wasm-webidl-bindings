@@ -872,6 +872,94 @@ pub enum FunctionBinding {
     Export(ExportBinding),
 }
 
+impl FunctionBinding {
+    /// In the context of a JS embedder that does *not* implement the Web IDL
+    /// bindings proposal, are this binding's ingoing and outgoing conversions
+    /// losslessly expressible with the default conversions of the WebAssembly
+    /// JavaScript interface and the ECMAScript bindings for Web IDL?
+    ///
+    /// This is primarily a question that is only relevant to polyfills for Web
+    /// IDL bindings, such as `wasm-bindgen`.
+    ///
+    /// For both incoming and outgoing values, the conversions are not
+    /// expressible if each value is referenced more than once in the binding
+    /// map, or the values are referenced out of order. Failure to meet this
+    /// criteria would result in swapped, garbage, extra, or not enough
+    /// parameters/results.
+    ///
+    /// In addition to the arity and usage requirements, each value's type must
+    /// also be trivially convertible. This property depends on whether the
+    /// value is incoming or outgoing.
+    ///
+    /// ## Outgoing Values
+    ///
+    /// When passing outgoing Wasm values to Web IDL, first they are converted
+    /// to JS values via the [`ToJSValue` algorithm defined by the WebAssembly
+    /// JavaScript
+    /// interface](https://webassembly.github.io/spec/js-api/index.html#tojsvalue). Next,
+    /// these JS values then they are converted into Web IDL values via [Web
+    /// IDL's ECMAScript type
+    /// mapping](https://heycam.github.io/webidl/#es-type-mapping).
+    ///
+    /// ```text
+    /// +------------+                                 +----------+                                        +---------------+
+    /// | Wasm value | ---WebAssembly-JS-interface---> | JS value | ---ECMAScript-bindings-for-Web-IDL---> | Web IDL value |
+    /// +------------+                                 +----------+                                        +---------------+
+    /// ```
+    ///
+    /// For outgoing values to be expressible without Web IDL bindings, nor
+    /// extra glue or conversions, they must be an `as` operator performing on
+    /// of the following conversions from a Wasm value type to a Web IDL type:
+    ///
+    /// | From Wasm valtype             | To Web IDL Type     |
+    /// |-------------------------------|---------------------|
+    /// | `i32`, `f32`, `f64`, `anyref` | `any`                                                                               |
+    /// | `i32`                         | `long`, `long long`, `float`, `unrestricted float`, `double`, `unrestricted double` |
+    /// | `f32`                   | `unrestricted float`, `unrestricted double`                                               |
+    /// | `f64`                   | `unrestricted double`                                                                     |
+    ///
+    /// ## Incoming Values
+    ///
+    /// When passing Web IDL values to Wasm, first they are converted to JS
+    /// values via the [Web IDL's ECMAScript type
+    /// mapping](https://heycam.github.io/webidl/#es-type-mapping), and then
+    /// those JS values are converted into Wasm values according to the
+    /// [`ToWebAssemblyValue` algorithm defined by the WebAssembly JavaScript
+    /// interface](https://webassembly.github.io/spec/js-api/index.html#towebassemblyvalue).
+    ///
+    /// ```text
+    /// +---------------+                                         +----------+                                 +---------------+
+    /// | Web IDL value |  ---ECMAScript-bindings-for-Web-IDL---> | JS value | ---WebAssembly-JS-interface---> | Web IDL value |
+    /// +---------------+                                         +----------+                                 +---------------+
+    /// ```
+    ///
+    /// For incoming values to be expressible without Web IDL bindings, nor
+    /// extra glue or conversions, they must be an incoming binding expression
+    /// of the form `(as (get <i>))` that is performing one of the following
+    /// conversions from a Web IDL type to a Wasm type:
+    ///
+    /// | From Web IDL Type | To Wasm valtype |
+    /// |-------------------|-----------------|
+    /// | `any`                                                                                                                               | `anyref`        |
+    /// | `byte`, `short`, `long`                                                                                                             | `i32`           |
+    /// | `byte`, `octet`, `short`, `unsigned short`, `float`, `unrestricted float`                                                           | `f32`           |
+    /// | `byte`, `octet`, `short`, `unsigned short`, `long`, `unsigned long`, `float`, `unrestricted float`, `double`, `unrestricted double` | `f64`           |
+    pub fn is_expressible_in_js_without_webidl_bindings(
+        &self,
+        module: &walrus::Module,
+        wb: &WebidlBindings,
+    ) -> bool {
+        match self {
+            FunctionBinding::Import(i) => {
+                i.is_expressible_in_js_without_webidl_bindings(module, wb)
+            }
+            FunctionBinding::Export(e) => {
+                e.is_expressible_in_js_without_webidl_bindings(module, wb)
+            }
+        }
+    }
+}
+
 impl From<ImportBinding> for FunctionBinding {
     fn from(a: ImportBinding) -> Self {
         FunctionBinding::Import(a)
@@ -892,12 +980,52 @@ pub struct ImportBinding {
     pub result: IncomingBindingMap,
 }
 
+impl ImportBinding {
+    fn is_expressible_in_js_without_webidl_bindings(
+        &self,
+        module: &walrus::Module,
+        wb: &WebidlBindings,
+    ) -> bool {
+        let wasm_ty = module.types.get(self.wasm_ty);
+        let webidl_ty = match self.webidl_ty.id().and_then(|id| wb.types.get(id)) {
+            Some(WebidlCompoundType::Function(f)) if f.kind == WebidlFunctionKind::Static => f,
+            _ => return false,
+        };
+        self.params
+            .is_expressible_in_js_without_webidl_bindings(wasm_ty.params(), &webidl_ty.params)
+            && self.result.is_expressible_in_js_without_webidl_bindings(
+                &webidl_ty.result.into_iter().collect::<Vec<_>>(),
+                wasm_ty.results(),
+            )
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExportBinding {
     pub wasm_ty: walrus::TypeId,
     pub webidl_ty: WebidlTypeRef,
     pub params: IncomingBindingMap,
     pub result: OutgoingBindingMap,
+}
+
+impl ExportBinding {
+    fn is_expressible_in_js_without_webidl_bindings(
+        &self,
+        module: &walrus::Module,
+        wb: &WebidlBindings,
+    ) -> bool {
+        let wasm_ty = module.types.get(self.wasm_ty);
+        let webidl_ty = match self.webidl_ty.id().and_then(|id| wb.types.get(id)) {
+            Some(WebidlCompoundType::Function(f)) if f.kind == WebidlFunctionKind::Static => f,
+            _ => return false,
+        };
+        self.params
+            .is_expressible_in_js_without_webidl_bindings(&webidl_ty.params, wasm_ty.params())
+            && self.result.is_expressible_in_js_without_webidl_bindings(
+                wasm_ty.results(),
+                &webidl_ty.result.into_iter().collect::<Vec<_>>(),
+            )
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -911,9 +1039,121 @@ pub struct OutgoingBindingMap {
     pub bindings: Vec<OutgoingBindingExpression>,
 }
 
+impl OutgoingBindingMap {
+    fn is_expressible_in_js_without_webidl_bindings(
+        &self,
+        from_wasm_tys: &[walrus::ValType],
+        to_webidl_tys: &[WebidlTypeRef],
+    ) -> bool {
+        if self.bindings.len() != from_wasm_tys.len() || self.bindings.len() != to_webidl_tys.len()
+        {
+            return false;
+        }
+
+        self.bindings
+            .iter()
+            .zip(from_wasm_tys)
+            .zip(to_webidl_tys)
+            .enumerate()
+            .all(|(i, ((expr, from_wasm_ty), to_webidl_ty))| {
+                if let OutgoingBindingExpression::As(a) = expr {
+                    if a.idx != i as u32 || a.ty != *to_webidl_ty {
+                        return false;
+                    }
+
+                    let to_webidl_ty = match to_webidl_ty {
+                        WebidlTypeRef::Scalar(s) => s,
+                        _ => return false,
+                    };
+
+                    match (from_wasm_ty, to_webidl_ty) {
+                        (_, WebidlScalarType::Any)
+                        | (walrus::ValType::I32, WebidlScalarType::Long)
+                        | (walrus::ValType::I32, WebidlScalarType::LongLong)
+                        | (walrus::ValType::I32, WebidlScalarType::Float)
+                        | (walrus::ValType::I32, WebidlScalarType::UnrestrictedFloat)
+                        | (walrus::ValType::I32, WebidlScalarType::Double)
+                        | (walrus::ValType::I32, WebidlScalarType::UnrestrictedDouble)
+                        | (walrus::ValType::F32, WebidlScalarType::UnrestrictedFloat)
+                        | (walrus::ValType::F32, WebidlScalarType::UnrestrictedDouble)
+                        | (walrus::ValType::F64, WebidlScalarType::UnrestrictedDouble) => true,
+                        _ => false,
+                    }
+                } else {
+                    false
+                }
+            })
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IncomingBindingMap {
     pub bindings: Vec<IncomingBindingExpression>,
+}
+
+impl IncomingBindingMap {
+    fn is_expressible_in_js_without_webidl_bindings(
+        &self,
+        from_webidl_tys: &[WebidlTypeRef],
+        to_wasm_tys: &[walrus::ValType],
+    ) -> bool {
+        if self.bindings.len() != from_webidl_tys.len() || self.bindings.len() != to_wasm_tys.len()
+        {
+            return false;
+        }
+
+        self.bindings
+            .iter()
+            .zip(from_webidl_tys)
+            .zip(to_wasm_tys)
+            .enumerate()
+            .all(|(i, ((expr, from_webidl_ty), to_wasm_ty))| {
+                if let IncomingBindingExpression::As(a) = expr {
+                    if a.ty != *to_wasm_ty {
+                        return false;
+                    }
+
+                    if let IncomingBindingExpression::Get(g) = &*a.expr {
+                        if g.idx != i as u32 {
+                            return false;
+                        }
+
+                        let from_webidl_ty = match from_webidl_ty {
+                            WebidlTypeRef::Scalar(s) => s,
+                            _ => return false,
+                        };
+
+                        match (from_webidl_ty, to_wasm_ty) {
+                            (WebidlScalarType::Any, walrus::ValType::Anyref)
+                            | (WebidlScalarType::Byte, walrus::ValType::I32)
+                            | (WebidlScalarType::Short, walrus::ValType::I32)
+                            | (WebidlScalarType::Long, walrus::ValType::I32)
+                            | (WebidlScalarType::Byte, walrus::ValType::F32)
+                            | (WebidlScalarType::Octet, walrus::ValType::F32)
+                            | (WebidlScalarType::Short, walrus::ValType::F32)
+                            | (WebidlScalarType::UnsignedShort, walrus::ValType::F32)
+                            | (WebidlScalarType::Float, walrus::ValType::F32)
+                            | (WebidlScalarType::UnrestrictedFloat, walrus::ValType::F32)
+                            | (WebidlScalarType::Byte, walrus::ValType::F64)
+                            | (WebidlScalarType::Octet, walrus::ValType::F64)
+                            | (WebidlScalarType::Short, walrus::ValType::F64)
+                            | (WebidlScalarType::UnsignedShort, walrus::ValType::F64)
+                            | (WebidlScalarType::Long, walrus::ValType::F64)
+                            | (WebidlScalarType::UnsignedLong, walrus::ValType::F64)
+                            | (WebidlScalarType::Float, walrus::ValType::F64)
+                            | (WebidlScalarType::UnrestrictedFloat, walrus::ValType::F64)
+                            | (WebidlScalarType::Double, walrus::ValType::F64)
+                            | (WebidlScalarType::UnrestrictedDouble, walrus::ValType::F64) => true,
+                            _ => false,
+                        }
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            })
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -1129,6 +1369,26 @@ pub enum WebidlTypeRef {
     Scalar(WebidlScalarType),
 }
 
+impl WebidlTypeRef {
+    /// Get this `WebidlTypeRef` as an id of a `WebidlCompoundType`, or `None`
+    /// if it is actually a scalar.
+    pub fn id(&self) -> Option<Id<WebidlCompoundType>> {
+        match self {
+            WebidlTypeRef::Id(id) => Some(*id),
+            _ => None,
+        }
+    }
+
+    /// Get this `WebidlTypeRef` as a `WebidlScalarType`, or `None` if it is
+    /// actually a compound type.
+    pub fn scalar(&self) -> Option<WebidlScalarType> {
+        match self {
+            WebidlTypeRef::Scalar(s) => Some(*s),
+            _ => None,
+        }
+    }
+}
+
 impl From<WebidlScalarType> for WebidlTypeRef {
     fn from(s: WebidlScalarType) -> Self {
         WebidlTypeRef::Scalar(s)
@@ -1173,4 +1433,463 @@ pub enum WebidlScalarType {
     Uint8ClampedArray,
     Float32Array,
     Float64Array,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn imports_expressible_without_webidl_bindings() {
+        let mut m = walrus::Module::default();
+        let wasm_ty = m
+            .types
+            .add(&[walrus::ValType::I32], &[walrus::ValType::I32]);
+
+        let mut wb = WebidlBindings::default();
+
+        let webidl_ty = wb
+            .types
+            .insert(WebidlCompoundType::Function(WebidlFunction {
+                kind: WebidlFunctionKind::Static,
+                params: vec![WebidlScalarType::Long.into()],
+                result: Some(WebidlScalarType::Long.into()),
+            }));
+
+        let binding = wb.bindings.insert(FunctionBinding::Import(ImportBinding {
+            wasm_ty,
+            webidl_ty: webidl_ty.into(),
+            params: OutgoingBindingMap {
+                bindings: vec![OutgoingBindingExpressionAs {
+                    ty: WebidlScalarType::Long.into(),
+                    idx: 0,
+                }
+                .into()],
+            },
+            result: IncomingBindingMap {
+                bindings: vec![IncomingBindingExpressionAs {
+                    ty: walrus::ValType::I32,
+                    expr: Box::new(IncomingBindingExpressionGet { idx: 0 }.into()),
+                }
+                .into()],
+            },
+        }));
+
+        let binding: &FunctionBinding = wb.bindings.get(binding).unwrap();
+        assert!(binding.is_expressible_in_js_without_webidl_bindings(&m, &wb));
+    }
+
+    #[test]
+    fn imports_not_expressible_without_webidl_bindings() {
+        let mut m = walrus::Module::default();
+        let wasm_ty = m.types.add(
+            &[walrus::ValType::I32, walrus::ValType::I32],
+            &[walrus::ValType::I32],
+        );
+
+        let mut wb = WebidlBindings::default();
+
+        let webidl_ty = wb
+            .types
+            .insert(WebidlCompoundType::Function(WebidlFunction {
+                kind: WebidlFunctionKind::Static,
+                params: vec![WebidlScalarType::DomString.into()],
+                result: Some(WebidlScalarType::Long.into()),
+            }));
+
+        let binding = wb.bindings.insert(FunctionBinding::Import(ImportBinding {
+            wasm_ty,
+            webidl_ty: webidl_ty.into(),
+            params: OutgoingBindingMap {
+                bindings: vec![OutgoingBindingExpressionUtf8Str {
+                    ty: WebidlScalarType::DomString.into(),
+                    offset: 0,
+                    length: 1,
+                }
+                .into()],
+            },
+            result: IncomingBindingMap {
+                bindings: vec![IncomingBindingExpressionAs {
+                    ty: walrus::ValType::I32,
+                    expr: Box::new(IncomingBindingExpressionGet { idx: 0 }.into()),
+                }
+                .into()],
+            },
+        }));
+
+        let binding: &FunctionBinding = wb.bindings.get(binding).unwrap();
+        assert!(!binding.is_expressible_in_js_without_webidl_bindings(&m, &wb));
+    }
+
+    #[test]
+    fn imports_function_kind_not_expressible_without_webidl_bindings() {
+        let mut m = walrus::Module::default();
+        let wasm_ty = m.types.add(&[walrus::ValType::Anyref], &[]);
+
+        let mut wb = WebidlBindings::default();
+
+        let webidl_ty = wb
+            .types
+            .insert(WebidlCompoundType::Function(WebidlFunction {
+                kind: WebidlFunctionKind::Method(WebidlFunctionKindMethod {
+                    ty: WebidlScalarType::Any.into(),
+                }),
+                params: vec![],
+                result: None,
+            }));
+
+        let binding = wb.bindings.insert(FunctionBinding::Import(ImportBinding {
+            wasm_ty,
+            webidl_ty: webidl_ty.into(),
+            params: OutgoingBindingMap {
+                bindings: vec![OutgoingBindingExpressionAs {
+                    ty: WebidlScalarType::Any.into(),
+                    idx: 0,
+                }
+                .into()],
+            },
+            result: IncomingBindingMap { bindings: vec![] },
+        }));
+
+        let binding: &FunctionBinding = wb.bindings.get(binding).unwrap();
+        assert!(!binding.is_expressible_in_js_without_webidl_bindings(&m, &wb));
+    }
+
+    #[test]
+    fn exports_expressible_without_webidl_bindings() {
+        let mut m = walrus::Module::default();
+        let wasm_ty = m
+            .types
+            .add(&[walrus::ValType::I32], &[walrus::ValType::I32]);
+
+        let mut wb = WebidlBindings::default();
+
+        let webidl_ty = wb
+            .types
+            .insert(WebidlCompoundType::Function(WebidlFunction {
+                kind: WebidlFunctionKind::Static,
+                params: vec![WebidlScalarType::Long.into()],
+                result: Some(WebidlScalarType::Long.into()),
+            }));
+
+        let binding = wb.bindings.insert(FunctionBinding::Export(ExportBinding {
+            wasm_ty,
+            webidl_ty: webidl_ty.into(),
+            params: IncomingBindingMap {
+                bindings: vec![IncomingBindingExpressionAs {
+                    ty: walrus::ValType::I32,
+                    expr: Box::new(IncomingBindingExpressionGet { idx: 0 }.into()),
+                }
+                .into()],
+            },
+            result: OutgoingBindingMap {
+                bindings: vec![OutgoingBindingExpressionAs {
+                    ty: WebidlScalarType::Long.into(),
+                    idx: 0,
+                }
+                .into()],
+            },
+        }));
+
+        let binding: &FunctionBinding = wb.bindings.get(binding).unwrap();
+        assert!(binding.is_expressible_in_js_without_webidl_bindings(&m, &wb));
+    }
+
+    #[test]
+    fn exports_not_expressible_without_webidl_bindings() {
+        let mut m = walrus::Module::default();
+        let wasm_ty = m.types.add(
+            &[walrus::ValType::I32, walrus::ValType::I32],
+            &[walrus::ValType::I32],
+        );
+
+        let mut wb = WebidlBindings::default();
+
+        let webidl_ty = wb
+            .types
+            .insert(WebidlCompoundType::Function(WebidlFunction {
+                kind: WebidlFunctionKind::Static,
+                params: vec![WebidlScalarType::DomString.into()],
+                result: Some(WebidlScalarType::Long.into()),
+            }));
+
+        let binding = wb.bindings.insert(FunctionBinding::Export(ExportBinding {
+            wasm_ty,
+            webidl_ty: webidl_ty.into(),
+            params: IncomingBindingMap {
+                bindings: vec![IncomingBindingExpressionAllocUtf8Str {
+                    alloc_func_name: "malloc".into(),
+                    expr: Box::new(IncomingBindingExpressionGet { idx: 0 }.into()),
+                }
+                .into()],
+            },
+            result: OutgoingBindingMap {
+                bindings: vec![OutgoingBindingExpressionAs {
+                    ty: WebidlScalarType::Long.into(),
+                    idx: 0,
+                }
+                .into()],
+            },
+        }));
+
+        let binding: &FunctionBinding = wb.bindings.get(binding).unwrap();
+        assert!(!binding.is_expressible_in_js_without_webidl_bindings(&m, &wb));
+    }
+
+    #[test]
+    fn exports_function_kind_not_expressible_without_webidl_bindings() {
+        let mut m = walrus::Module::default();
+        let wasm_ty = m.types.add(&[walrus::ValType::Anyref], &[]);
+
+        let mut wb = WebidlBindings::default();
+
+        let webidl_ty = wb
+            .types
+            .insert(WebidlCompoundType::Function(WebidlFunction {
+                kind: WebidlFunctionKind::Method(WebidlFunctionKindMethod {
+                    ty: WebidlScalarType::Any.into(),
+                }),
+                params: vec![],
+                result: None,
+            }));
+
+        let binding = wb.bindings.insert(FunctionBinding::Export(ExportBinding {
+            wasm_ty,
+            webidl_ty: webidl_ty.into(),
+            params: IncomingBindingMap {
+                bindings: vec![IncomingBindingExpressionAs {
+                    ty: walrus::ValType::Anyref,
+                    expr: Box::new(IncomingBindingExpressionGet { idx: 0 }.into()),
+                }
+                .into()],
+            },
+            result: OutgoingBindingMap { bindings: vec![] },
+        }));
+
+        let binding: &FunctionBinding = wb.bindings.get(binding).unwrap();
+        assert!(!binding.is_expressible_in_js_without_webidl_bindings(&m, &wb));
+    }
+
+    #[test]
+    fn incoming_empty_trivially_expressible_without_webidl_bindings() {
+        let map = IncomingBindingMap { bindings: vec![] };
+        assert!(map.is_expressible_in_js_without_webidl_bindings(&[], &[]));
+    }
+
+    #[test]
+    fn incoming_arity_not_expressible_without_webidl_bindings() {
+        let map = IncomingBindingMap {
+            bindings: vec![IncomingBindingExpressionAs {
+                ty: walrus::ValType::I32,
+                expr: Box::new(IncomingBindingExpressionGet { idx: 0 }.into()),
+            }
+            .into()],
+        };
+
+        // Too many Web IDL types.
+        assert!(!map.is_expressible_in_js_without_webidl_bindings(
+            &[WebidlScalarType::Long.into(), WebidlScalarType::Long.into(),],
+            &[walrus::ValType::I32],
+        ));
+
+        // Not enough Web IDL types.
+        assert!(!map.is_expressible_in_js_without_webidl_bindings(&[], &[walrus::ValType::I32]));
+
+        // Too many wasm valtypes.
+        assert!(!map.is_expressible_in_js_without_webidl_bindings(
+            &[WebidlScalarType::Long.into()],
+            &[walrus::ValType::I32, walrus::ValType::I32],
+        ));
+
+        // Not enough wasm valtypes.
+        assert!(!map
+            .is_expressible_in_js_without_webidl_bindings(&[WebidlScalarType::Long.into()], &[]));
+    }
+
+    #[test]
+    fn incoming_usage_order_not_expressible_without_webidl_bindings() {
+        // Attempts to use param at index 1 before param at index 0.
+        let map = IncomingBindingMap {
+            bindings: vec![
+                IncomingBindingExpressionAs {
+                    ty: walrus::ValType::I32,
+                    expr: Box::new(IncomingBindingExpressionGet { idx: 1 }.into()),
+                }
+                .into(),
+                IncomingBindingExpressionAs {
+                    ty: walrus::ValType::I32,
+                    expr: Box::new(IncomingBindingExpressionGet { idx: 0 }.into()),
+                }
+                .into(),
+            ],
+        };
+
+        // And therefore, is not expressible even though arity and types work out.
+        assert!(!map.is_expressible_in_js_without_webidl_bindings(
+            &[WebidlScalarType::Long.into(), WebidlScalarType::Long.into()],
+            &[walrus::ValType::I32, walrus::ValType::I32],
+        ));
+    }
+
+    #[test]
+    fn incoming_binding_operator_not_expressible_without_webidl_bindings() {
+        let map = IncomingBindingMap {
+            bindings: vec![IncomingBindingExpressionAllocUtf8Str {
+                alloc_func_name: "malloc".into(),
+                expr: Box::new(IncomingBindingExpressionGet { idx: 0 }.into()),
+            }
+            .into()],
+        };
+        assert!(!map.is_expressible_in_js_without_webidl_bindings(
+            &[WebidlScalarType::DomString.into()],
+            &[walrus::ValType::I32, walrus::ValType::I32],
+        ));
+    }
+
+    #[test]
+    fn outgoing_empty_trivially_expressible_without_webidl_bindings() {
+        let map = OutgoingBindingMap { bindings: vec![] };
+        assert!(map.is_expressible_in_js_without_webidl_bindings(&[], &[]));
+    }
+
+    #[test]
+    fn outgoing_arity_not_expressible_without_webidl_bindings() {
+        let map = OutgoingBindingMap {
+            bindings: vec![OutgoingBindingExpressionAs {
+                ty: WebidlScalarType::Long.into(),
+                idx: 0,
+            }
+            .into()],
+        };
+
+        // Too many Web IDL types.
+        assert!(!map.is_expressible_in_js_without_webidl_bindings(
+            &[walrus::ValType::I32],
+            &[WebidlScalarType::Long.into(), WebidlScalarType::Long.into(),],
+        ));
+
+        // Not enough Web IDL types.
+        assert!(!map.is_expressible_in_js_without_webidl_bindings(&[walrus::ValType::I32], &[]));
+
+        // Too many wasm valtypes.
+        assert!(!map.is_expressible_in_js_without_webidl_bindings(
+            &[walrus::ValType::I32, walrus::ValType::I32],
+            &[WebidlScalarType::Long.into()],
+        ));
+
+        // Not enough wasm valtypes.
+        assert!(!map
+            .is_expressible_in_js_without_webidl_bindings(&[], &[WebidlScalarType::Long.into()]));
+    }
+
+    #[test]
+    fn outgoing_usage_order_not_expressible_without_webidl_bindings() {
+        // Attempts to use param at index 1 before param at index 0.
+        let map = OutgoingBindingMap {
+            bindings: vec![
+                OutgoingBindingExpressionAs {
+                    ty: WebidlScalarType::Long.into(),
+                    idx: 1,
+                }
+                .into(),
+                OutgoingBindingExpressionAs {
+                    ty: WebidlScalarType::Long.into(),
+                    idx: 0,
+                }
+                .into(),
+            ],
+        };
+
+        // And therefore, is not expressible even though arity and types work out.
+        assert!(!map.is_expressible_in_js_without_webidl_bindings(
+            &[walrus::ValType::I32, walrus::ValType::I32],
+            &[WebidlScalarType::Long.into(), WebidlScalarType::Long.into()],
+        ));
+    }
+
+    #[test]
+    fn outgoing_binding_operator_not_expressible_without_webidl_bindings() {
+        let map = OutgoingBindingMap {
+            bindings: vec![OutgoingBindingExpressionUtf8Str {
+                ty: WebidlScalarType::DomString.into(),
+                offset: 0,
+                length: 1,
+            }
+            .into()],
+        };
+        assert!(!map.is_expressible_in_js_without_webidl_bindings(
+            &[walrus::ValType::I32, walrus::ValType::I32],
+            &[WebidlScalarType::DomString.into()],
+        ));
+    }
+
+    const WEBIDL_SCALARS: &[WebidlTypeRef] = &[
+        WebidlTypeRef::Scalar(WebidlScalarType::Any),
+        WebidlTypeRef::Scalar(WebidlScalarType::Boolean),
+        WebidlTypeRef::Scalar(WebidlScalarType::Byte),
+        WebidlTypeRef::Scalar(WebidlScalarType::Octet),
+        WebidlTypeRef::Scalar(WebidlScalarType::Long),
+        WebidlTypeRef::Scalar(WebidlScalarType::UnsignedLong),
+        WebidlTypeRef::Scalar(WebidlScalarType::Short),
+        WebidlTypeRef::Scalar(WebidlScalarType::UnsignedShort),
+        WebidlTypeRef::Scalar(WebidlScalarType::LongLong),
+        WebidlTypeRef::Scalar(WebidlScalarType::UnsignedLongLong),
+        WebidlTypeRef::Scalar(WebidlScalarType::Float),
+        WebidlTypeRef::Scalar(WebidlScalarType::UnrestrictedFloat),
+        WebidlTypeRef::Scalar(WebidlScalarType::Double),
+        WebidlTypeRef::Scalar(WebidlScalarType::UnrestrictedDouble),
+        WebidlTypeRef::Scalar(WebidlScalarType::DomString),
+        WebidlTypeRef::Scalar(WebidlScalarType::ByteString),
+        WebidlTypeRef::Scalar(WebidlScalarType::UsvString),
+        WebidlTypeRef::Scalar(WebidlScalarType::Object),
+        WebidlTypeRef::Scalar(WebidlScalarType::Symbol),
+        WebidlTypeRef::Scalar(WebidlScalarType::ArrayBuffer),
+        WebidlTypeRef::Scalar(WebidlScalarType::DataView),
+        WebidlTypeRef::Scalar(WebidlScalarType::Int8Array),
+        WebidlTypeRef::Scalar(WebidlScalarType::Int16Array),
+        WebidlTypeRef::Scalar(WebidlScalarType::Int32Array),
+        WebidlTypeRef::Scalar(WebidlScalarType::Uint8Array),
+        WebidlTypeRef::Scalar(WebidlScalarType::Uint16Array),
+        WebidlTypeRef::Scalar(WebidlScalarType::Uint32Array),
+        WebidlTypeRef::Scalar(WebidlScalarType::Uint8ClampedArray),
+        WebidlTypeRef::Scalar(WebidlScalarType::Float32Array),
+        WebidlTypeRef::Scalar(WebidlScalarType::Float64Array),
+    ];
+
+    const WASM_VALTYPES: &[walrus::ValType] = &[
+        walrus::ValType::I32,
+        walrus::ValType::I64,
+        walrus::ValType::F32,
+        walrus::ValType::F64,
+        walrus::ValType::V128,
+        walrus::ValType::Anyref,
+    ];
+
+    #[test]
+    fn check_whether_all_outgoing_types_expressible_without_webidl_bindings() {
+        for to in WEBIDL_SCALARS.iter().cloned() {
+            let map = OutgoingBindingMap {
+                bindings: vec![OutgoingBindingExpressionAs { ty: to, idx: 0 }.into()],
+            };
+            for from in WASM_VALTYPES.iter().cloned() {
+                let _ = map.is_expressible_in_js_without_webidl_bindings(&[from], &[to]);
+            }
+        }
+    }
+
+    #[test]
+    fn check_whether_all_incoming_types_expressible_without_webidl_bindings() {
+        for to in WASM_VALTYPES.iter().cloned() {
+            let map = IncomingBindingMap {
+                bindings: vec![IncomingBindingExpressionAs {
+                    ty: to,
+                    expr: Box::new(IncomingBindingExpressionGet { idx: 0 }.into()),
+                }
+                .into()],
+            };
+            for from in WEBIDL_SCALARS.iter().cloned() {
+                let _ = map.is_expressible_in_js_without_webidl_bindings(&[from], &[to]);
+            }
+        }
+    }
 }
