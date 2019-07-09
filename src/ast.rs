@@ -1071,32 +1071,11 @@ impl OutgoingBindingMap {
             .zip(to_webidl_tys)
             .enumerate()
             .all(|(i, ((expr, from_wasm_ty), to_webidl_ty))| {
-                if let OutgoingBindingExpression::As(a) = expr {
-                    if a.idx != i as u32 || a.ty != *to_webidl_ty {
-                        return false;
-                    }
-
-                    let to_webidl_ty = match to_webidl_ty {
-                        WebidlTypeRef::Scalar(s) => s,
-                        _ => return false,
-                    };
-
-                    match (from_wasm_ty, to_webidl_ty) {
-                        (_, WebidlScalarType::Any)
-                        | (walrus::ValType::I32, WebidlScalarType::Long)
-                        | (walrus::ValType::I32, WebidlScalarType::LongLong)
-                        | (walrus::ValType::I32, WebidlScalarType::Float)
-                        | (walrus::ValType::I32, WebidlScalarType::UnrestrictedFloat)
-                        | (walrus::ValType::I32, WebidlScalarType::Double)
-                        | (walrus::ValType::I32, WebidlScalarType::UnrestrictedDouble)
-                        | (walrus::ValType::F32, WebidlScalarType::UnrestrictedFloat)
-                        | (walrus::ValType::F32, WebidlScalarType::UnrestrictedDouble)
-                        | (walrus::ValType::F64, WebidlScalarType::UnrestrictedDouble) => true,
-                        _ => false,
-                    }
-                } else {
-                    false
-                }
+                expr.is_expressible_in_js_without_webidl_bindings(
+                    *from_wasm_ty,
+                    *to_webidl_ty,
+                    i as u32,
+                )
             })
     }
 }
@@ -1128,50 +1107,11 @@ impl IncomingBindingMap {
             .zip(to_wasm_tys)
             .enumerate()
             .all(|(i, ((expr, from_webidl_ty), to_wasm_ty))| {
-                if let IncomingBindingExpression::As(a) = expr {
-                    if a.ty != *to_wasm_ty {
-                        return false;
-                    }
-
-                    if let IncomingBindingExpression::Get(g) = &*a.expr {
-                        if g.idx != i as u32 {
-                            return false;
-                        }
-
-                        let from_webidl_ty = match from_webidl_ty {
-                            WebidlTypeRef::Scalar(s) => s,
-                            _ => return false,
-                        };
-
-                        match (from_webidl_ty, to_wasm_ty) {
-                            (WebidlScalarType::Any, walrus::ValType::Anyref)
-                            | (WebidlScalarType::Byte, walrus::ValType::I32)
-                            | (WebidlScalarType::Short, walrus::ValType::I32)
-                            | (WebidlScalarType::Long, walrus::ValType::I32)
-                            | (WebidlScalarType::Byte, walrus::ValType::F32)
-                            | (WebidlScalarType::Octet, walrus::ValType::F32)
-                            | (WebidlScalarType::Short, walrus::ValType::F32)
-                            | (WebidlScalarType::UnsignedShort, walrus::ValType::F32)
-                            | (WebidlScalarType::Float, walrus::ValType::F32)
-                            | (WebidlScalarType::UnrestrictedFloat, walrus::ValType::F32)
-                            | (WebidlScalarType::Byte, walrus::ValType::F64)
-                            | (WebidlScalarType::Octet, walrus::ValType::F64)
-                            | (WebidlScalarType::Short, walrus::ValType::F64)
-                            | (WebidlScalarType::UnsignedShort, walrus::ValType::F64)
-                            | (WebidlScalarType::Long, walrus::ValType::F64)
-                            | (WebidlScalarType::UnsignedLong, walrus::ValType::F64)
-                            | (WebidlScalarType::Float, walrus::ValType::F64)
-                            | (WebidlScalarType::UnrestrictedFloat, walrus::ValType::F64)
-                            | (WebidlScalarType::Double, walrus::ValType::F64)
-                            | (WebidlScalarType::UnrestrictedDouble, walrus::ValType::F64) => true,
-                            _ => false,
-                        }
-                    } else {
-                        false
-                    }
-                } else {
-                    false
-                }
+                expr.is_expressible_in_js_without_webidl_bindings(
+                    *from_webidl_ty,
+                    *to_wasm_ty,
+                    i as u32,
+                )
             })
     }
 }
@@ -1233,6 +1173,47 @@ impl From<OutgoingBindingExpressionDict> for OutgoingBindingExpression {
 impl From<OutgoingBindingExpressionBindExport> for OutgoingBindingExpression {
     fn from(s: OutgoingBindingExpressionBindExport) -> Self {
         OutgoingBindingExpression::BindExport(s)
+    }
+}
+
+impl OutgoingBindingExpression {
+    /// Is this outgoing binding expression expressible in JS without Web IDL
+    /// bindings, and without a polyfill for them?
+    ///
+    /// See `FunctionBinding::is_expressible_in_js_without_webidl_bindings` for
+    /// details.
+    pub fn is_expressible_in_js_without_webidl_bindings(
+        &self,
+        from_wasm_ty: walrus::ValType,
+        to_webidl_ty: WebidlTypeRef,
+        at_index: u32,
+    ) -> bool {
+        if let OutgoingBindingExpression::As(a) = self {
+            if a.idx != at_index || a.ty != to_webidl_ty {
+                return false;
+            }
+
+            let to_webidl_ty = match to_webidl_ty {
+                WebidlTypeRef::Scalar(s) => s,
+                _ => return false,
+            };
+
+            match (from_wasm_ty, to_webidl_ty) {
+                (_, WebidlScalarType::Any)
+                | (walrus::ValType::I32, WebidlScalarType::Long)
+                | (walrus::ValType::I32, WebidlScalarType::LongLong)
+                | (walrus::ValType::I32, WebidlScalarType::Float)
+                | (walrus::ValType::I32, WebidlScalarType::UnrestrictedFloat)
+                | (walrus::ValType::I32, WebidlScalarType::Double)
+                | (walrus::ValType::I32, WebidlScalarType::UnrestrictedDouble)
+                | (walrus::ValType::F32, WebidlScalarType::UnrestrictedFloat)
+                | (walrus::ValType::F32, WebidlScalarType::UnrestrictedDouble)
+                | (walrus::ValType::F64, WebidlScalarType::UnrestrictedDouble) => true,
+                _ => false,
+            }
+        } else {
+            false
+        }
     }
 }
 
@@ -1338,6 +1319,65 @@ impl From<IncomingBindingExpressionField> for IncomingBindingExpression {
 impl From<IncomingBindingExpressionBindImport> for IncomingBindingExpression {
     fn from(a: IncomingBindingExpressionBindImport) -> Self {
         IncomingBindingExpression::BindImport(a)
+    }
+}
+
+impl IncomingBindingExpression {
+    /// Is this incoming binding expression expressible in JS without Web IDL
+    /// bindings, and without a polyfill for them?
+    ///
+    /// See `FunctionBinding::is_expressible_in_js_without_webidl_bindings` for
+    /// details.
+    pub fn is_expressible_in_js_without_webidl_bindings(
+        &self,
+        from_webidl_ty: WebidlTypeRef,
+        to_wasm_ty: walrus::ValType,
+        at_index: u32,
+    ) -> bool {
+        if let IncomingBindingExpression::As(a) = self {
+            if a.ty != to_wasm_ty {
+                return false;
+            }
+
+            if let IncomingBindingExpression::Get(g) = &*a.expr {
+                if g.idx != at_index {
+                    return false;
+                }
+
+                let from_webidl_ty = match from_webidl_ty {
+                    WebidlTypeRef::Scalar(s) => s,
+                    _ => return false,
+                };
+
+                match (from_webidl_ty, to_wasm_ty) {
+                    (WebidlScalarType::Any, walrus::ValType::Anyref)
+                    | (WebidlScalarType::Byte, walrus::ValType::I32)
+                    | (WebidlScalarType::Short, walrus::ValType::I32)
+                    | (WebidlScalarType::Long, walrus::ValType::I32)
+                    | (WebidlScalarType::Byte, walrus::ValType::F32)
+                    | (WebidlScalarType::Octet, walrus::ValType::F32)
+                    | (WebidlScalarType::Short, walrus::ValType::F32)
+                    | (WebidlScalarType::UnsignedShort, walrus::ValType::F32)
+                    | (WebidlScalarType::Float, walrus::ValType::F32)
+                    | (WebidlScalarType::UnrestrictedFloat, walrus::ValType::F32)
+                    | (WebidlScalarType::Byte, walrus::ValType::F64)
+                    | (WebidlScalarType::Octet, walrus::ValType::F64)
+                    | (WebidlScalarType::Short, walrus::ValType::F64)
+                    | (WebidlScalarType::UnsignedShort, walrus::ValType::F64)
+                    | (WebidlScalarType::Long, walrus::ValType::F64)
+                    | (WebidlScalarType::UnsignedLong, walrus::ValType::F64)
+                    | (WebidlScalarType::Float, walrus::ValType::F64)
+                    | (WebidlScalarType::UnrestrictedFloat, walrus::ValType::F64)
+                    | (WebidlScalarType::Double, walrus::ValType::F64)
+                    | (WebidlScalarType::UnrestrictedDouble, walrus::ValType::F64) => true,
+                    _ => false,
+                }
+            } else {
+                false
+            }
+        } else {
+            false
+        }
     }
 }
 
