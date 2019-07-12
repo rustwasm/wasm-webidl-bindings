@@ -1200,14 +1200,22 @@ impl OutgoingBindingExpression {
 
             match (from_wasm_ty, to_webidl_ty) {
                 (_, WebidlScalarType::Any)
+                | (walrus::ValType::I32, WebidlScalarType::Boolean)
+                | (walrus::ValType::I32, WebidlScalarType::Byte)
+                | (walrus::ValType::I32, WebidlScalarType::Octet)
+                | (walrus::ValType::I32, WebidlScalarType::Short)
+                | (walrus::ValType::I32, WebidlScalarType::UnsignedShort)
                 | (walrus::ValType::I32, WebidlScalarType::Long)
                 | (walrus::ValType::I32, WebidlScalarType::LongLong)
                 | (walrus::ValType::I32, WebidlScalarType::Float)
                 | (walrus::ValType::I32, WebidlScalarType::UnrestrictedFloat)
                 | (walrus::ValType::I32, WebidlScalarType::Double)
                 | (walrus::ValType::I32, WebidlScalarType::UnrestrictedDouble)
+                | (walrus::ValType::F32, WebidlScalarType::Float)
                 | (walrus::ValType::F32, WebidlScalarType::UnrestrictedFloat)
+                | (walrus::ValType::F32, WebidlScalarType::Double)
                 | (walrus::ValType::F32, WebidlScalarType::UnrestrictedDouble)
+                | (walrus::ValType::F64, WebidlScalarType::Double)
                 | (walrus::ValType::F64, WebidlScalarType::UnrestrictedDouble) => true,
                 _ => false,
             }
@@ -1351,9 +1359,13 @@ impl IncomingBindingExpression {
 
                 match (from_webidl_ty, to_wasm_ty) {
                     (WebidlScalarType::Any, walrus::ValType::Anyref)
+                    | (WebidlScalarType::Boolean, walrus::ValType::I32)
                     | (WebidlScalarType::Byte, walrus::ValType::I32)
+                    | (WebidlScalarType::Octet, walrus::ValType::I32)
                     | (WebidlScalarType::Short, walrus::ValType::I32)
+                    | (WebidlScalarType::UnsignedShort, walrus::ValType::I32)
                     | (WebidlScalarType::Long, walrus::ValType::I32)
+                    | (WebidlScalarType::UnsignedLong, walrus::ValType::I32)
                     | (WebidlScalarType::Byte, walrus::ValType::F32)
                     | (WebidlScalarType::Octet, walrus::ValType::F32)
                     | (WebidlScalarType::Short, walrus::ValType::F32)
