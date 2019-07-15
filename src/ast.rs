@@ -1200,7 +1200,6 @@ impl OutgoingBindingExpression {
 
             match (from_wasm_ty, to_webidl_ty) {
                 (_, WebidlScalarType::Any)
-                | (walrus::ValType::I32, WebidlScalarType::Boolean)
                 | (walrus::ValType::I32, WebidlScalarType::Byte)
                 | (walrus::ValType::I32, WebidlScalarType::Octet)
                 | (walrus::ValType::I32, WebidlScalarType::Short)
