@@ -100,3 +100,7 @@ pub mod text;
 
 #[cfg(feature = "quickcheck")]
 mod quickcheck;
+
+fn version() -> &'static str {
+    env!("CARGO_PKG_VERSION")
+}

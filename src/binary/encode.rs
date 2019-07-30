@@ -130,6 +130,10 @@ impl Encode for WebidlBindings {
         Cx: Indices,
         W: ?Sized + io::Write,
     {
+        // A temporary version marker while we wait for the official spec to
+        // stabilize
+        crate::version().to_string().encode(cx, w)?;
+
         // Web IDL Type Subsection.
         self.types.encode(cx, w)?;
 
@@ -733,64 +737,71 @@ mod tests {
 
                 &*b
             },
-            vec![
-                // types subsection
-                0,
-                // number of types
-                2,
-                // dictionary type
-                1,
-                // number of fields
-                2,
-                // "read"
-                4, 114, 101, 97, 100,
-                118,
-                // "written"
-                7, 119, 114, 105, 116, 116, 101, 110,
-                118,
-                // function type
-                0,
-                // method
-                1, 127,
-                // params
-                2, 111, 103,
-                // result
-                1, 11,
-                // bindings subsection
-                1,
-                // number of bindings
-                1,
-                // import
-                0,
-                44,
-                11,
-                // params
-                3,
-                // as
-                0, 127, 0,
-                // as
-                0, 127, 1,
-                // view
-                4, 103, 2, 3,
-                // results
-                2,
-                // as
-                1, 126,
-                // field
-                5, 0,
-                // get
-                0, 0,
-                // as
-                1, 126,
-                // field
-                5, 1,
-                // get
-                0, 0,
-                // number of binds
-                1,
-                // bind
-                33, 22,
-            ],
+            {
+                let section = vec![
+                    // types subsection
+                    0,
+                    // number of types
+                    2,
+                    // dictionary type
+                    1,
+                    // number of fields
+                    2,
+                    // "read"
+                    4, 114, 101, 97, 100,
+                    118,
+                    // "written"
+                    7, 119, 114, 105, 116, 116, 101, 110,
+                    118,
+                    // function type
+                    0,
+                    // method
+                    1, 127,
+                    // params
+                    2, 111, 103,
+                    // result
+                    1, 11,
+                    // bindings subsection
+                    1,
+                    // number of bindings
+                    1,
+                    // import
+                    0,
+                    44,
+                    11,
+                    // params
+                    3,
+                    // as
+                    0, 127, 0,
+                    // as
+                    0, 127, 1,
+                    // view
+                    4, 103, 2, 3,
+                    // results
+                    2,
+                    // as
+                    1, 126,
+                    // field
+                    5, 0,
+                    // get
+                    0, 0,
+                    // as
+                    1, 126,
+                    // field
+                    5, 1,
+                    // get
+                    0, 0,
+                    // number of binds
+                    1,
+                    // bind
+                    33, 22,
+                ];
+                let mut bytes = vec![];
+                crate::version().to_string().encode(&mut TestIndices, &mut bytes)
+                    .expect("writing to a vec can't fail");
+                bytes.extend_from_slice(&section);
+                bytes
+            },
         );
 
         webidl_type_function(
