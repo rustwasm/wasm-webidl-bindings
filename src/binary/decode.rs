@@ -1,4 +1,5 @@
 use crate::ast::*;
+use failure::bail;
 use id_arena::Id;
 use std::io::Read;
 
@@ -180,6 +181,18 @@ impl Decode for WebidlBindings {
     type Output = ();
 
     fn decode(cx: &mut DecodeContext, r: &mut &[u8]) -> Result<(), failure::Error> {
+        // A temporary version marker while we wait for the official spec to
+        // stabilize
+        let version = String::decode(cx, r)?;
+        if version != crate::version() {
+            bail!(
+                "version mismatch in the bindings section: wasm file has `{}` \
+                 and this library supports `{}`",
+                version,
+                crate::version()
+            );
+        }
+
         // Web IDL Type Subsection.
         WebidlTypes::decode(cx, r)?;
 
@@ -857,13 +870,19 @@ mod tests {
         WebidlBindings,
         webidl_bindings_ok_0(
             |m, i, b| {},
-            [
-                0, // types subsection
-                0, // number of types
-                1, // bindings subsection
-                0, // number of bindings
-                0, // number of bind statements
-            ],
+            {
+                let section = [
+                    0, // types subsection
+                    0, // number of types
+                    1, // bindings subsection
+                    0, // number of bindings
+                    0, // number of bind statements
+                ];
+                let mut bytes = vec![crate::version().len() as u8];
+                bytes.extend_from_slice(crate::version().as_bytes());
+                bytes.extend_from_slice(&section);
+                bytes
+            }
         ),
     );
     assert_decode_err!(
