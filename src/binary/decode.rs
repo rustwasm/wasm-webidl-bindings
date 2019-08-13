@@ -634,16 +634,18 @@ mod tests {
 
         let mut module = walrus::Module::with_config(config);
 
-        let ty = module
-            .types
-            .add(&[walrus::ValType::I32], &[walrus::ValType::I32]);
-
-        let mut builder = walrus::FunctionBuilder::new();
+        let mut builder = walrus::FunctionBuilder::new(
+            &mut module.types,
+            &[walrus::ValType::I32],
+            &[walrus::ValType::I32],
+        );
         let arg = module.locals.add(walrus::ValType::I32);
-        let lhs = builder.local_get(arg);
-        let rhs = builder.i32_const(2);
-        let mul = builder.binop(walrus::ir::BinaryOp::I32Mul, lhs, rhs);
-        builder.finish(ty, vec![arg], vec![mul], &mut module);
+        builder
+            .func_body()
+            .local_get(arg)
+            .i32_const(2)
+            .binop(walrus::ir::BinaryOp::I32Mul);
+        builder.finish(vec![arg], &mut module.funcs);
 
         module
     }
@@ -868,22 +870,19 @@ mod tests {
     // WebidlBindings
     assert_decode_ok!(
         WebidlBindings,
-        webidl_bindings_ok_0(
-            |m, i, b| {},
-            {
-                let section = [
-                    0, // types subsection
-                    0, // number of types
-                    1, // bindings subsection
-                    0, // number of bindings
-                    0, // number of bind statements
-                ];
-                let mut bytes = vec![crate::version().len() as u8];
-                bytes.extend_from_slice(crate::version().as_bytes());
-                bytes.extend_from_slice(&section);
-                bytes
-            }
-        ),
+        webidl_bindings_ok_0(|m, i, b| {}, {
+            let section = [
+                0, // types subsection
+                0, // number of types
+                1, // bindings subsection
+                0, // number of bindings
+                0, // number of bind statements
+            ];
+            let mut bytes = vec![crate::version().len() as u8];
+            bytes.extend_from_slice(crate::version().as_bytes());
+            bytes.extend_from_slice(&section);
+            bytes
+        }),
     );
     assert_decode_err!(
         WebidlBindings,

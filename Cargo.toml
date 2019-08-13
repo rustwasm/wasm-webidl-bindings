@@ -1,6 +1,6 @@
 [package]
 name = "wasm-webidl-bindings"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>", "The Rust and WebAssembly Working Group"]
 edition = "2018"
 description = "Raw WebIDL bindings binary encoder/decoder with an AST. Still in a state of flux!"
@@ -9,9 +9,9 @@ license = "MIT/Apache-2.0"
 readme = "./README.md"
 
 [dependencies]
-failure = "0.1.5"
+failure = { version = "0.1.5", features = ['std'], default-features = false }
 leb128 = "0.2.4"
-walrus = "0.10.0"
+walrus = "0.11.0"
 wasm-webidl-bindings-text-parser = { version = "=0.1.2", path = "crates/text-parser", optional = true }
 id-arena = "2.2.1"
 quickcheck = { version = "0.8.5", optional = true }
