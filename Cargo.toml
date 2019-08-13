@@ -9,7 +9,7 @@ license = "MIT/Apache-2.0"
 readme = "./README.md"
 
 [dependencies]
-failure = "0.1.5"
+failure = { version = "0.1.5", features = ['std'], default-features = false }
 leb128 = "0.2.4"
 walrus = "0.11.0"
 wasm-webidl-bindings-text-parser = { version = "=0.1.2", path = "crates/text-parser", optional = true }
