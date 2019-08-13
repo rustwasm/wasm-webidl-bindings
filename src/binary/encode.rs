@@ -609,9 +609,9 @@ mod tests {
             return f.id().into();
         }
 
-        let ty = m.types.add(&[], &[]);
-        let id = walrus::FunctionBuilder::new().finish(ty, vec![], vec![], m);
-        id.into()
+        walrus::FunctionBuilder::new(&mut m.types, &[], &[])
+            .finish(vec![], &mut m.funcs)
+            .into()
     }
 
     fn get_wasm_func_type_ref(m: &mut walrus::Module) -> walrus::TypeId {
