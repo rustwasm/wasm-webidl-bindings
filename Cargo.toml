@@ -11,7 +11,7 @@ readme = "./README.md"
 [dependencies]
 failure = { version = "0.1.5", features = ['std'], default-features = false }
 leb128 = "0.2.4"
-walrus = "0.11.0"
+walrus = "0.12.0"
 wasm-webidl-bindings-text-parser = { version = "=0.1.2", path = "crates/text-parser", optional = true }
 id-arena = "2.2.1"
 quickcheck = { version = "0.8.5", optional = true }

@@ -651,9 +651,7 @@ mod tests {
     }
 
     lazy_static::lazy_static! {
-        static ref WASM_BUF: Vec<u8> = make_test_module()
-            .emit_wasm()
-            .expect("should emit test module's wasm");
+        static ref WASM_BUF: Vec<u8> = make_test_module().emit_wasm();
     }
 
     fn with_test_module<F>(f: F)
