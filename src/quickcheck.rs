@@ -156,7 +156,7 @@ mod tests {
         fn can_encode_and_decode_arbitrary_webidl_bindings(section: WebidlBindings) -> () {
             let mut module = walrus::Module::default();
             module.customs.add(section);
-            let buf = module.emit_wasm().expect("should emit wasm OK");
+            let buf = module.emit_wasm();
 
             let mut config = walrus::ModuleConfig::default();
             config.on_parse(|module, ids| {
@@ -175,7 +175,7 @@ mod tests {
                 name: "webidl-bindings".into(),
                 data,
             });
-            let wasm_buf = module.emit_wasm().unwrap();
+            let wasm_buf = module.emit_wasm();
 
             let mut config = walrus::ModuleConfig::default();
             config.on_parse(|module, ids| {

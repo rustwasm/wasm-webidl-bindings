@@ -1,6 +1,6 @@
 [package]
 name = "wasm-webidl-bindings-text-parser"
-version = "0.1.2"
+version = "0.5.0"
 description = "Raw WebIDL bindings text encoder/decoder. Still in a state of flux!"
 repository = "https://github.com/rustwasm/wasm-webidl-bindings"
 license = "MIT/Apache-2.0"
@@ -15,4 +15,4 @@ failure = "0.1.5"
 lalrpop-util = "0.17.1"
 leb128 = "0.2.4"
 regex = "1.1.7"
-walrus = "0.8.0"
+walrus = "0.12.0"
