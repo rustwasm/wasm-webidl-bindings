@@ -23,7 +23,7 @@
 
 ```rust
 #[cfg(feature = "text")]
-# fn foo() -> Result<(), failure::Error> {
+# fn foo() -> anyhow::Result<()> {
 use wasm_webidl_bindings::{binary, text};
 
 // Get the `walrus::Module` that this webidl-bindings section is for.

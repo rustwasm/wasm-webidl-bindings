@@ -23,7 +23,7 @@ where
 ///
 /// This does *not* parse the custom section discriminant and "webidl-bindings"
 /// custom section name, just the inner data.
-pub fn decode(ids: &walrus::IndicesToIds, from: &[u8]) -> Result<WebidlBindings, failure::Error> {
+pub fn decode(ids: &walrus::IndicesToIds, from: &[u8]) -> anyhow::Result<WebidlBindings> {
     let mut cx = DecodeContext::new(ids);
     let mut from = from;
     WebidlBindings::decode(&mut cx, &mut from)?;
@@ -32,10 +32,7 @@ pub fn decode(ids: &walrus::IndicesToIds, from: &[u8]) -> Result<WebidlBindings,
 
 /// Callback for `walrus::ModuleConfig::on_parse` to parse the webidl bindings
 /// custom section if one is found.
-pub fn on_parse(
-    module: &mut walrus::Module,
-    ids: &walrus::IndicesToIds,
-) -> Result<(), failure::Error> {
+pub fn on_parse(module: &mut walrus::Module, ids: &walrus::IndicesToIds) -> anyhow::Result<()> {
     let section = match module.customs.remove_raw("webidl-bindings") {
         Some(s) => s,
         None => return Ok(()),

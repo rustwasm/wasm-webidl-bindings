@@ -13,7 +13,7 @@ include!(concat!(env!("OUT_DIR"), "/grammar.rs"));
 pub fn parse_with_actions<A>(
     actions: &mut A,
     input: &str,
-) -> Result<A::WebidlBindingsSection, failure::Error>
+) -> anyhow::Result<A::WebidlBindingsSection>
 where
     A: Actions,
 {
@@ -22,7 +22,7 @@ where
 
     let ast = WebidlBindingsSectionParser::new()
         .parse(input, actions, lexer)
-        .map_err(|e| failure::format_err!("{}", e))?;
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
     Ok(ast)
 }
 
