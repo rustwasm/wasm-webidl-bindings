@@ -1,6 +1,6 @@
 [package]
 name = "wasm-webidl-bindings-text-parser"
-version = "0.6.0"
+version = "0.7.0"
 description = "Raw WebIDL bindings text encoder/decoder. Still in a state of flux!"
 repository = "https://github.com/rustwasm/wasm-webidl-bindings"
 license = "MIT/Apache-2.0"

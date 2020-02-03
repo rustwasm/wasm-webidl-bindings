@@ -1,6 +1,6 @@
 [package]
 name = "wasm-webidl-bindings"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>", "The Rust and WebAssembly Working Group"]
 edition = "2018"
 description = "Raw WebIDL bindings binary encoder/decoder with an AST. Still in a state of flux!"
