@@ -264,10 +264,15 @@ impl FunctionBindings {
 
 #[derive(Clone, Debug, Default)]
 pub struct Binds {
-    pub(crate) arena: id_arena::Arena<Bind>,
+    indices: Vec<Id<Bind>>,
+    pub(crate) arena: Arena<Bind>,
 }
 
 impl Binds {
+    pub fn by_index(&self, index: u32) -> Option<Id<Bind>> {
+        self.indices.get(index as usize).cloned()
+    }
+
     pub fn get(&self, id: Id<Bind>) -> Option<&Bind> {
         self.arena.get(id.into())
     }
@@ -277,7 +282,10 @@ impl Binds {
     }
 
     pub fn insert(&mut self, bind: Bind) -> Id<Bind> {
-        self.arena.alloc(bind)
+        let id = self.arena.alloc(bind);
+        self.indices.push(id);
+
+        id
     }
 
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = (Id<Bind>, &'a Bind)> + 'a {
