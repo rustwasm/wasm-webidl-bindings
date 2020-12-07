@@ -434,35 +434,30 @@ impl Encode for OutgoingBindingExpression {
                 w.uleb(e.offset)?;
                 w.uleb(e.length)
             }
-            OutgoingBindingExpression::Utf8CStr(e) => {
-                w.byte(2)?;
-                e.ty.encode(cx, w)?;
-                w.uleb(e.offset)
-            }
             OutgoingBindingExpression::I32ToEnum(e) => {
-                w.byte(3)?;
+                w.byte(2)?;
                 e.ty.encode(cx, w)?;
                 w.uleb(e.idx)
             }
             OutgoingBindingExpression::View(e) => {
-                w.byte(4)?;
+                w.byte(3)?;
                 e.ty.encode(cx, w)?;
                 w.uleb(e.offset)?;
                 w.uleb(e.length)
             }
             OutgoingBindingExpression::Copy(e) => {
-                w.byte(5)?;
+                w.byte(4)?;
                 e.ty.encode(cx, w)?;
                 w.uleb(e.offset)?;
                 w.uleb(e.length)
             }
             OutgoingBindingExpression::Dict(e) => {
-                w.byte(6)?;
+                w.byte(5)?;
                 e.ty.encode(cx, w)?;
                 w.vec(cx, &e.fields)
             }
             OutgoingBindingExpression::BindExport(e) => {
-                w.byte(7)?;
+                w.byte(6)?;
                 e.ty.encode(cx, w)?;
                 e.binding.encode(cx, w)?;
                 w.uleb(e.idx)
@@ -776,7 +771,7 @@ mod tests {
                     // as
                     0, 127, 1,
                     // view
-                    4, 103, 2, 3,
+                    3, 103, 2, 3,
                     // results
                     2,
                     // as
@@ -1112,19 +1107,6 @@ mod tests {
                 4,
             ],
         );
-        outgoing_binding_expression_utf8_cstr(
-            |b, m| OutgoingBindingExpression::Utf8CStr(OutgoingBindingExpressionUtf8CStr {
-                ty: get_webidl_type_ref(b),
-                offset: 99,
-            }),
-            [
-                // utf8-cstr
-                2,
-                11,
-                // offset
-                99,
-            ],
-        );
         outgoing_binding_expression_i32_to_enum(
             |b, m| OutgoingBindingExpression::I32ToEnum(OutgoingBindingExpressionI32ToEnum {
                 ty: get_webidl_type_ref(b),
@@ -1132,7 +1114,7 @@ mod tests {
             }),
             [
                 // i32-to-enum
-                3,
+                2,
                 11,
                 // idx
                 4,
@@ -1146,7 +1128,7 @@ mod tests {
             }),
             [
                 // view
-                4,
+                3,
                 11,
                 // offset
                 1,
@@ -1162,7 +1144,7 @@ mod tests {
             }),
             [
                 // copy
-                5,
+                4,
                 11,
                 // offset
                 1,
@@ -1182,7 +1164,7 @@ mod tests {
             }),
             [
                 // dict
-                6,
+                5,
                 11,
                 // Number of fields
                 1,
@@ -1200,7 +1182,7 @@ mod tests {
             }),
             [
                 // bind-export
-                7,
+                6,
                 11,
                 22,
                 3,

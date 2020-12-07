@@ -211,14 +211,13 @@ outgoing_binding_map ::= vec(outgoing_binding_expression)
 
 outgoing_binding_expression ::= 0x0 webidl_type_reference u32     # as
                             ::= 0x1 webidl_type_reference u32 u32 # utf8-str
-                            ::= 0x2 webidl_type_reference u32     # utf8-cstr
-                            ::= 0x3 webidl_type_reference u32     # i32-to-enum
-                            ::= 0x4 webidl_type_reference u32 u32 # view
-                            ::= 0x5 webidl_type_reference u32 u32 # copy
-                            ::= 0x6                               # dict
+                            ::= 0x2 webidl_type_reference u32     # i32-to-enum
+                            ::= 0x3 webidl_type_reference u32 u32 # view
+                            ::= 0x4 webidl_type_reference u32 u32 # copy
+                            ::= 0x5                               # dict
                                 webidl_type_reference
                                 vec(outgoing_binding_expression)
-                            ::= 0x7 webidl_type_reference u32 u32 # bind-export
+                            ::= 0x6 webidl_type_reference u32 u32 # bind-export
 ```
 
 ### Incoming Bindings

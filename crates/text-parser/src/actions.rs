@@ -126,7 +126,6 @@ pub trait Actions {
 
     type OutgoingBindingExpression: From<Self::OutgoingBindingExpressionAs>
         + From<Self::OutgoingBindingExpressionUtf8Str>
-        + From<Self::OutgoingBindingExpressionUtf8CStr>
         + From<Self::OutgoingBindingExpressionI32ToEnum>
         + From<Self::OutgoingBindingExpressionView>
         + From<Self::OutgoingBindingExpressionCopy>
@@ -147,13 +146,6 @@ pub trait Actions {
         offset: u32,
         length: u32,
     ) -> Self::OutgoingBindingExpressionUtf8Str;
-
-    type OutgoingBindingExpressionUtf8CStr;
-    fn outgoing_binding_expression_utf8_c_str(
-        &mut self,
-        ty: Self::WebidlTypeRef,
-        offset: u32,
-    ) -> Self::OutgoingBindingExpressionUtf8CStr;
 
     type OutgoingBindingExpressionI32ToEnum;
     fn outgoing_binding_expression_i32_to_enum(

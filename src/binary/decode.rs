@@ -477,33 +477,28 @@ impl Decode for OutgoingBindingExpression {
             }
             2 => {
                 let ty = WebidlTypeRef::decode(cx, r)?;
-                let offset = r.uleb()?;
-                e(OutgoingBindingExpressionUtf8CStr { ty, offset })
-            }
-            3 => {
-                let ty = WebidlTypeRef::decode(cx, r)?;
                 let idx = r.uleb()?;
                 e(OutgoingBindingExpressionI32ToEnum { ty, idx })
             }
-            4 => {
+            3 => {
                 let ty = WebidlTypeRef::decode(cx, r)?;
                 let offset = r.uleb()?;
                 let length = r.uleb()?;
                 e(OutgoingBindingExpressionView { ty, offset, length })
             }
-            5 => {
+            4 => {
                 let ty = WebidlTypeRef::decode(cx, r)?;
                 let offset = r.uleb()?;
                 let length = r.uleb()?;
                 e(OutgoingBindingExpressionCopy { ty, offset, length })
             }
-            6 => {
+            5 => {
                 let ty = WebidlTypeRef::decode(cx, r)?;
                 let mut fields = vec![];
                 r.vec::<OutgoingBindingExpression, _>(cx, &mut fields)?;
                 e(OutgoingBindingExpressionDict { ty, fields })
             }
-            7 => {
+            6 => {
                 let ty = WebidlTypeRef::decode(cx, r)?;
                 let binding = <Id<FunctionBinding>>::decode(cx, r)?;
                 let idx = r.uleb()?;
@@ -1640,24 +1635,13 @@ mod tests {
                 1,    // length
             ],
         ),
-        outgoing_binding_expression_ok_2(
-            |m, i, b| obe(OutgoingBindingExpressionUtf8CStr {
-                ty: WebidlScalarType::DomString.into(),
-                offset: 0,
-            }),
-            [
-                2,    // discriminant
-                0x71, // DOMString
-                0,    // offset
-            ],
-        ),
         outgoing_binding_expression_ok_3(
             |m, i, b| obe(OutgoingBindingExpressionI32ToEnum {
                 ty: get_my_enum_id(b),
                 idx: 4,
             }),
             [
-                3, // discriminant
+                2, // discriminant
                 1, // my_enum
                 4, // idx
             ],
@@ -1669,7 +1653,7 @@ mod tests {
                 length: 5,
             }),
             [
-                4,    // discriminant
+                3,    // discriminant
                 0x67, // Uint8Array
                 4,    // offset
                 5,    // length
@@ -1682,7 +1666,7 @@ mod tests {
                 length: 9,
             }),
             [
-                5,    // discriminant
+                4,    // discriminant
                 0x67, // Uint8Array
                 8,    // offset
                 9,    // length
@@ -1697,7 +1681,7 @@ mod tests {
                 })],
             }),
             [
-                6,    // discriminant
+                5,    // discriminant
                 0,    // my_dict
                 1,    // number of fields
                 0,    // discriminant
@@ -1712,7 +1696,7 @@ mod tests {
                 idx: 7,
             }),
             [
-                7, // discriminant
+                6, // discriminant
                 2, // my_func
                 1, // my_export_binding
                 7, // idx
@@ -1751,7 +1735,7 @@ mod tests {
                // no length
         ]),
         outgoing_binding_expression_err_5([
-            2, // discriminant
+            1, // discriminant
             0x71, // DOMString
                // no offset
         ]),
@@ -1761,53 +1745,53 @@ mod tests {
                // no offset
         ]),
         outgoing_binding_expression_err_7([
-            3, // discriminant
+            2, // discriminant
             1, // my_enum
                // no idx
         ]),
         outgoing_binding_expression_err_8([
-            3, // discriminant
+            2, // discriminant
                // no ty
                // no idx
         ]),
         outgoing_binding_expression_err_9([
-            4,    // discriminant
+            3,    // discriminant
             0x67, // Uint8Array
             4,    // offset
                   // no length
         ]),
         outgoing_binding_expression_err_10([
-            4, // discriminant
+            3, // discriminant
             0x67, // Uint8Array
                // no offset
                // no length
         ]),
         outgoing_binding_expression_err_11([
-            4, // discriminant
+            3, // discriminant
                // no ty
                // no offset
                // no length
         ]),
         outgoing_binding_expression_err_12([
-            5,    // discriminant
+            3,    // discriminant
             0x67, // Uint8Array
             8,    // offset
                   // no length
         ]),
         outgoing_binding_expression_err_13([
-            5, // discriminant
+            3, // discriminant
             0x67, // Uint8Array
                // no offset
                // no length
         ]),
         outgoing_binding_expression_err_14([
-            5, // discriminant
+            3, // discriminant
                // no ty
                // no offset
                // no length
         ]),
         outgoing_binding_expression_err_15([
-            6, // discriminant
+            5, // discriminant
             0, // my_dict
             1, // number of fields
             0, // discriminant
@@ -1815,35 +1799,35 @@ mod tests {
                // no idx
         ]),
         outgoing_binding_expression_err_16([
-            6, // discriminant
+            5, // discriminant
             0, // my_dict
             1, // number of fields
                // no fields
         ]),
         outgoing_binding_expression_err_17([
-            6, // discriminant
+            5, // discriminant
             0, // my_dict
                // no number of fields
         ]),
         outgoing_binding_expression_err_18([
-            6, // discriminant
+            5, // discriminant
                // no dict type
                // no number of fields
         ]),
         outgoing_binding_expression_err_19([
-            7, // discriminant
+            5, // discriminant
             2, // my_func
             1, // my_export_binding
                // no idx
         ]),
         outgoing_binding_expression_err_20([
-            7, // discriminant
+            5, // discriminant
             2, // my_func
                // no export binding
                // no idx
         ]),
         outgoing_binding_expression_err_21([
-            7, // discriminant
+            5, // discriminant
                // no func ty
                // no export binding
                // no idx

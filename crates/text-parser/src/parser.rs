@@ -267,15 +267,6 @@ mod tests {
             t!("OutgoingBindingExpressionUtf8Str" ty offset length)
         }
 
-        type OutgoingBindingExpressionUtf8CStr = ParseTree;
-        fn outgoing_binding_expression_utf8_c_str(
-            &mut self,
-            ty: Self::WebidlTypeRef,
-            offset: u32,
-        ) -> Self::OutgoingBindingExpressionUtf8CStr {
-            t!("OutgoingBindingExpressionUtf8CStr" ty offset)
-        }
-
         type OutgoingBindingExpressionI32ToEnum = ParseTree;
         fn outgoing_binding_expression_i32_to_enum(
             &mut self,
@@ -1165,26 +1156,6 @@ mod tests {
         outgoing_binding_expression_utf8_str_err_2,
         OutgoingBindingExpressionParser,
         "(utf8-str 123 456)"
-    );
-
-    ok!(
-        outgoing_binding_expression_utf8_c_str_ok,
-        OutgoingBindingExpressionParser,
-        "(utf8-cstr DOMString 123)",
-        t!("OutgoingBindingExpressionUtf8CStr"
-           t!("WebidlScalarType" "DOMString")
-           123
-        )
-    );
-    err!(
-        outgoing_binding_expression_utf8_c_str_err_1,
-        OutgoingBindingExpressionParser,
-        "(utf8-cstr DOMString)"
-    );
-    err!(
-        outgoing_binding_expression_utf8_c_str_err_2,
-        OutgoingBindingExpressionParser,
-        "(utf8-cstr 123)"
     );
 
     ok!(

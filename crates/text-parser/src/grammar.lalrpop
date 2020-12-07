@@ -260,7 +260,6 @@ BindingRefIndexed: A::BindingRefIndexed =
 pub(crate) OutgoingBindingExpression: A::OutgoingBindingExpression = {
     <a:OutgoingBindingExpressionAs> => a.into(),
     <a:OutgoingBindingExpressionUtf8Str> => a.into(),
-    <a:OutgoingBindingExpressionUtf8CStr> => a.into(),
     <a:OutgoingBindingExpressionI32ToEnum> => a.into(),
     <a:OutgoingBindingExpressionView> => a.into(),
     <a:OutgoingBindingExpressionCopy> => a.into(),
@@ -275,10 +274,6 @@ OutgoingBindingExpressionAs: A::OutgoingBindingExpressionAs =
 OutgoingBindingExpressionUtf8Str: A::OutgoingBindingExpressionUtf8Str =
     "(" "utf8-str" <ty:WebidlTypeRef> <offset:Unsigned> <length:Unsigned> ")" =>
         actions.outgoing_binding_expression_utf8_str(ty, offset, length);
-
-OutgoingBindingExpressionUtf8CStr: A::OutgoingBindingExpressionUtf8CStr =
-    "(" "utf8-cstr" <ty:WebidlTypeRef> <offset:Unsigned> ")" =>
-        actions.outgoing_binding_expression_utf8_c_str(ty, offset);
 
 OutgoingBindingExpressionI32ToEnum: A::OutgoingBindingExpressionI32ToEnum =
     "(" "i32-to-enum" <ty:WebidlTypeRef> <idx:WebidlIndex> ")" =>
@@ -384,7 +379,6 @@ extern {
         "Uint8Array" => Token::Uint8Array,
         "Uint8ClampedArray" => Token::Uint8ClampedArray,
         "alloc-copy" => Token::AllocCopy,
-        "alloc-utf8-cstr" => Token::AllocUtf8CStr,
         "alloc-utf8-str" => Token::AllocUtf8Str,
         "any" => Token::Any,
         "anyref" => Token::Anyref,
@@ -431,7 +425,6 @@ extern {
         "unsigned long long" => Token::UnsignedLongLong,
         "unsigned long" => Token::UnsignedLong,
         "unsigned short" => Token::UnsignedShort,
-        "utf8-cstr" => Token::Utf8CStr,
         "utf8-str" => Token::Utf8Str,
         "v128" => Token::V128,
         "view" => Token::View,

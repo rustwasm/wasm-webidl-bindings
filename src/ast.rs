@@ -488,15 +488,6 @@ impl<'a> text::Actions for BuildAstActions<'a> {
         OutgoingBindingExpressionUtf8Str { ty, offset, length }
     }
 
-    type OutgoingBindingExpressionUtf8CStr = OutgoingBindingExpressionUtf8CStr;
-    fn outgoing_binding_expression_utf8_c_str(
-        &mut self,
-        ty: WebidlTypeRef,
-        offset: u32,
-    ) -> OutgoingBindingExpressionUtf8CStr {
-        OutgoingBindingExpressionUtf8CStr { ty, offset }
-    }
-
     type OutgoingBindingExpressionI32ToEnum = OutgoingBindingExpressionI32ToEnum;
     fn outgoing_binding_expression_i32_to_enum(
         &mut self,
@@ -1120,7 +1111,6 @@ impl IncomingBindingMap {
 pub enum OutgoingBindingExpression {
     As(OutgoingBindingExpressionAs),
     Utf8Str(OutgoingBindingExpressionUtf8Str),
-    Utf8CStr(OutgoingBindingExpressionUtf8CStr),
     I32ToEnum(OutgoingBindingExpressionI32ToEnum),
     View(OutgoingBindingExpressionView),
     Copy(OutgoingBindingExpressionCopy),
@@ -1137,12 +1127,6 @@ impl From<OutgoingBindingExpressionAs> for OutgoingBindingExpression {
 impl From<OutgoingBindingExpressionUtf8Str> for OutgoingBindingExpression {
     fn from(s: OutgoingBindingExpressionUtf8Str) -> Self {
         OutgoingBindingExpression::Utf8Str(s)
-    }
-}
-
-impl From<OutgoingBindingExpressionUtf8CStr> for OutgoingBindingExpression {
-    fn from(s: OutgoingBindingExpressionUtf8CStr) -> Self {
-        OutgoingBindingExpression::Utf8CStr(s)
     }
 }
 
@@ -1235,12 +1219,6 @@ pub struct OutgoingBindingExpressionUtf8Str {
     pub ty: WebidlTypeRef,
     pub offset: u32,
     pub length: u32,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct OutgoingBindingExpressionUtf8CStr {
-    pub ty: WebidlTypeRef,
-    pub offset: u32,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
